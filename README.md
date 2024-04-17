@@ -1,2 +1,2 @@
-# Crop-Type-Detection-Service
-Crop Type Detection Service
+# CSHD - Crop Sowing and Harvesting Detection Service for Earth Observation Data Cubes
+Crop Sowing and Harvesting Detection Service
