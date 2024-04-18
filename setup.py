@@ -20,7 +20,11 @@ setup(
     author='Gabriel Sansigolo',
     author_email = "gabrielsansigolo@gmail.com",
     url = "https://github.com/GSansigolo/cshd",
-    install_requires= [],
+    install_requires= [
+        "dask==2024.4.1",
+        "statsmodels==0.14.2",
+        "datacube==1.8.18",
+    ],
     long_description = LONG_DESCRIPTION,
     setup_requires=['pytest-runner'],
     tests_require=['pytest==4.4.1'],
