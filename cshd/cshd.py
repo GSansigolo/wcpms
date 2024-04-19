@@ -1,7 +1,8 @@
 
 import urllib
 import requests
-from .phenolopy import calc_phenometrics
+from datetime import datetime
+from .phenolopy import calc_phenometrics as phenolopy_calc_phenometrics
 
 url_wtss = 'https://brazildatacube.dpi.inpe.br/wtss'
 
@@ -46,10 +47,17 @@ def params_phenometrics(peak_metric='pos', base_metric='bse', method='first_of_s
         abs_value=abs_value
 )
 
-def calc_phenometrics(da, engine):
+def calc_phenometrics(da, engine, config):
 
+    peak_metric = config['peak_metric']
+    base_metric = config['base_metric']
+    method = config['method']
+    factor = config['factor']
+    thresh_sides = config['thresh_sides']
+    abs_value = config['abs_value']
+    
     if engine=='phenolopy':
-        ds = calc_phenometrics(da, peak_metric='pos', base_metric='vos', method='seasonal_amplitude', factor=0.2, thresh_sides='two_sided',abs_value=0.1)
+        ds = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
 
     if engine=='dea':
         return print('TO DO')
