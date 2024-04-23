@@ -14,16 +14,17 @@ import zipfile
 url_wtss = 'https://brazildatacube.dpi.inpe.br/wtss'
 url_stac = 'https://data.inpe.br/bdc/stac/v1/'
 
-def cube_query(collection, start_date, end_date, bands=None, bbox=None):
+def cube_query(collection, start_date, end_date, freq, bands=None, bbox=None):
     return dict(
         collection = collection,
         bands = bands,
         start_date = start_date,
         end_date = end_date,
+        freq=freq,
         bbox = bbox
     )
 
-def get_data(cube, geom):
+def get_timeseries(cube, geom):
     dataset = []
     total_process_bar = len(geom)
     progress = 0
@@ -43,7 +44,8 @@ def get_data(cube, geom):
         print(url_wtss + url_suffix)
         data = requests.get(url_wtss + url_suffix) 
         #dataset =
-        return data.json()
+        data_json = data.json()
+        return data_json['result']
 
 def params_phenometrics(peak_metric='pos', base_metric='bse', method='first_of_slope', factor=0.5, thresh_sides='two_sided', abs_value=0):
     return dict(
@@ -153,3 +155,24 @@ def cshd_cube(timeseries, start_date, freq):
     dates_datetime64 = pd.date_range(pd.to_datetime(start_date, format='%Y-%m-%d'), periods=len(np_arrays[0]), freq=freq)
     data_xr = xr.DataArray(np_arrays, coords = {'time': dates_datetime64})
     return data_xr
+
+def get_phenometrics(cube, geom, engine, config):
+
+    data = get_timeseries(
+        cube=cube, 
+        geom=geom
+    )
+
+    data_array = cshd_array(
+        timeserie=data['attributes'][0]['values'],
+        start_date=cube['start_date'],
+        freq=cube['freq']
+    )
+
+    ds_phenos = calc_phenometrics(
+        da=data_array,
+        engine=engine,
+        config=config
+    )
+
+    return ds_phenos
