@@ -16,7 +16,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     version = VERSION,
-    description='Crop Sowing and Harvesting Detection Service based on Phenolopy and Digital Earth Australia.',
+    description='Crop Sowing and Harvesting Detection Service based on Phenolopy.',
     author='Gabriel Sansigolo',
     author_email = "gabrielsansigolo@gmail.com",
     url = "https://github.com/GSansigolo/cshd",

@@ -149,12 +149,17 @@ def cshd_array(timeserie, start_date, freq):
     return data_xr
 
 def cshd_cube(timeseries, start_date, freq):
-    np_arrays = []
+    list_da = []
     for ts in timeseries:
-        np_arrays.append(np.array(ts, dtype=np.float32))
-    dates_datetime64 = pd.date_range(pd.to_datetime(start_date, format='%Y-%m-%d'), periods=len(np_arrays[0]), freq=freq)
-    data_xr = xr.DataArray(np_arrays, coords = {'time': dates_datetime64})
-    return data_xr
+        np_array = np.array(ts, dtype=np.float32)
+        dates_datetime64 = pd.date_range(pd.to_datetime(start_date, format='%Y-%m-%d'), periods=len(np_array), freq=freq)
+        data_xr = xr.DataArray(np_array, coords = {'time': dates_datetime64})
+        list_da.append(data_xr)
+    print(list_da)
+    #data_cube = xr.combine_by_coords(list_da)   
+    #return data_cube
+
+    #Could not find any dimension coordinates to use to order the datasets for concatenation
 
 def get_phenometrics(cube, geom, engine, config):
 
