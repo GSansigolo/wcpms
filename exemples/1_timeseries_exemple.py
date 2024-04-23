@@ -1,6 +1,6 @@
-from cshd import cube, get_data
+from cshd import cube_query, get_data
 
-S2_cube = cube(
+S2_cube = cube_query(
     collection="S2-16D-2",
     start_date="2019-01-01",
     end_date="2024-12-31",

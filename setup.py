@@ -25,7 +25,8 @@ setup(
         "statsmodels==0.14.2",
         "datacube==1.8.18",
         "rioxarray==0.15.4",
-        "xarray==2024.3.0"
+        "xarray==2024.3.0",
+        "pystac-client==0.7.7" 
     ],
     long_description = LONG_DESCRIPTION,
     setup_requires=['pytest-runner'],
