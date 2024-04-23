@@ -7,6 +7,7 @@ from pystac_client import Client
 from tqdm import tqdm
 import xarray as xr
 import pandas as pd
+import numpy as np
 import os, glob
 import zipfile
 
@@ -126,7 +127,7 @@ def unzip():
             print("An exception occurred")
             os.remove(z)
 
-def cshd_cube(data_dir):
+def cshd_img_cube(data_dir):
     list_da = []
     for path in os.listdir(data_dir):
         da = xr.open_dataarray(os.path.join(data_dir+path), engine='rasterio')
@@ -138,3 +139,17 @@ def cshd_cube(data_dir):
         list_da.append(da)
     data_cube = xr.combine_by_coords(list_da)   
     return data_cube
+
+def cshd_array(timeserie, start_date, freq):
+    np_serie = np.array(timeserie, dtype=np.float32)
+    dates_datetime64 = pd.date_range(pd.to_datetime(start_date, format='%Y-%m-%d'), periods=len(np_serie), freq=freq)
+    data_xr = xr.DataArray(np_serie, coords = {'time': dates_datetime64})
+    return data_xr
+
+def cshd_cube(timeseries, start_date, freq):
+    np_arrays = []
+    for ts in timeseries:
+        np_arrays.append(np.array(ts, dtype=np.float32))
+    dates_datetime64 = pd.date_range(pd.to_datetime(start_date, format='%Y-%m-%d'), periods=len(np_arrays[0]), freq=freq)
+    data_xr = xr.DataArray(np_arrays, coords = {'time': dates_datetime64})
+    return data_xr
