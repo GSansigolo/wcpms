@@ -14,14 +14,28 @@ import zipfile
 url_wtss = 'https://brazildatacube.dpi.inpe.br/wtss'
 url_stac = 'https://data.inpe.br/bdc/stac/v1/'
 
-def cube_query(collection, start_date, end_date, freq, bands=None, bbox=None):
+def cube_query(collection, start_date, end_date, freq, bands=None):
+    """An object that contains the information associated with a collection 
+    that can be downloaded or acessed.
+
+    Args:
+        collection : String containing a collection id.
+
+        start_date String containing the start date of the associated collection. Following YYYY-MM-DD structure.
+
+        end_date : String containing the start date of the associated collection. Following YYYY-MM-DD structure.
+
+        freq String containing the frequency of images of the associated collection. Following (days)D structure. 
+
+        bands : Optional, list of string containing the bands id.
+    """
+
     return dict(
         collection = collection,
         bands = bands,
         start_date = start_date,
         end_date = end_date,
-        freq=freq,
-        bbox = bbox
+        freq=freq
     )
 
 def get_timeseries(cube, geom):
@@ -47,15 +61,16 @@ def get_timeseries(cube, geom):
         data_json = data.json()
         return data_json['result']
 
-def params_phenometrics(peak_metric='pos', base_metric='bse', method='first_of_slope', factor=0.5, thresh_sides='two_sided', abs_value=0):
+def params_phenometrics(peak_metric='pos', base_metric='bse', method='first_of_slope', factor=0.5, thresh_sides='two_sided', abs_value=0, format= None):
     return dict(
         peak_metric=peak_metric, 
         base_metric=base_metric, 
         method=method, 
         factor=factor, 
         thresh_sides=thresh_sides, 
-        abs_value=abs_value
-)
+        abs_value=abs_value,
+        format=format
+    )
 
 def calc_phenometrics(da, engine, config):
     peak_metric = config['peak_metric']
@@ -64,9 +79,23 @@ def calc_phenometrics(da, engine, config):
     factor = config['factor']
     thresh_sides = config['thresh_sides']
     abs_value = config['abs_value']
+    format = config['format']
+
     if engine=='phenolopy':
-        ds = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
-    return ds
+        ds_phenos = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
+        if format=='full':
+            return ds_phenos
+        else:
+            return dict(
+                sos_t=ds_phenos['sos_times'].values[()],
+                pos_t=ds_phenos['pos_times'].values[()], 
+                eos_t=ds_phenos['eos_times'].values[()],
+                vos_t=ds_phenos['vos_times'].values[()],
+                sos_v=ds_phenos['sos_values'].values[()],
+                pos_v=ds_phenos['pos_values'].values[()], 
+                vos_v=ds_phenos['vos_values'].values[()],
+                eos_v=ds_phenos['eos_values'].values[()],
+        )
 
 def calc_phenometrics_cube(cshd_cube, engine, config):
     peak_metric = config['peak_metric']
@@ -75,12 +104,26 @@ def calc_phenometrics_cube(cshd_cube, engine, config):
     factor = config['factor']
     thresh_sides = config['thresh_sides']
     abs_value = config['abs_value']
+    format = config['format']
+
     if engine=='phenolopy':
         list_series = cshd_cube.keys()
         list_pheno = []
         for ts in list_series:
-            ds = phenolopy_calc_phenometrics(da=cshd_cube[ts], peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
-            list_pheno.append(ds)
+            ds_phenos = phenolopy_calc_phenometrics(da=cshd_cube[ts], peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
+            if format=='full':
+                list_pheno.append(ds_phenos)
+            else:
+                list_pheno.append(dict(
+                    sos_t=ds_phenos['sos_times'].values[()],
+                    pos_t=ds_phenos['pos_times'].values[()], 
+                    eos_t=ds_phenos['eos_times'].values[()],
+                    vos_t=ds_phenos['vos_times'].values[()],
+                    sos_v=ds_phenos['sos_values'].values[()],
+                    pos_v=ds_phenos['pos_values'].values[()], 
+                    vos_v=ds_phenos['vos_values'].values[()],
+                    eos_v=ds_phenos['eos_values'].values[()],
+            ))
         return list_pheno
     
 def download_stream(file_path: str, response, chunk_size=1024*64, progress=True, offset=0, total_size=None):
@@ -194,4 +237,7 @@ def get_phenometrics(cube, geom, engine, config):
         config=config
     )
 
-    return ds_phenos
+    return dict(
+        phenometrics = ds_phenos, 
+        timeseries = data_array
+    )

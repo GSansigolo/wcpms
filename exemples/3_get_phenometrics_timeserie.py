@@ -13,8 +13,8 @@ print(config)
 
 S2_cube = cube_query(
     collection="S2-16D-2",
-    start_date="2019-01-01",
-    end_date="2024-12-31",
+    start_date="2021-01-01",
+    end_date="2021-12-31",
     freq='16D',
     bands=["EVI"]
 )
@@ -23,7 +23,7 @@ print(S2_cube)
 
 ds_phenos = get_phenometrics(
     cube=S2_cube,
-    geom=[dict(coordinates = [-48.419193814, -8.354332142])],
+    geom=[dict(coordinates = [-52.4538803100586, -13.68668633547038])],
     engine='phenolopy',
     config=config
 )
