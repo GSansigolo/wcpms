@@ -1,1 +1,1 @@
-from .cshd import cube_query, get_timeseries, params_phenometrics, calc_phenometrics, cshd_img_cube, cshd_cube, cshd_array, get_phenometrics
+from .cshd import cube_query, get_timeseries, params_phenometrics, calc_phenometrics, cshd_img_cube, cshd_cube, cshd_array, get_phenometrics, calc_phenometrics_cube

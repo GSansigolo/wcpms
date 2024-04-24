@@ -1,4 +1,4 @@
-from cshd import calc_phenometrics, params_phenometrics, cshd_cube
+from cshd import calc_phenometrics_cube, params_phenometrics, cshd_cube
 
 config = params_phenometrics(
     peak_metric='pos', 
@@ -22,8 +22,8 @@ evi_cube = cshd_cube(
 
 print(evi_cube)
 
-ds_phenos = calc_phenometrics(
-    da=evi_cube,
+ds_phenos = calc_phenometrics_cube(
+    cshd_cube=evi_cube,
     engine='phenolopy',
     config=config
 )

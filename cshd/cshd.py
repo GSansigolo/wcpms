@@ -68,6 +68,21 @@ def calc_phenometrics(da, engine, config):
         ds = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
     return ds
 
+def calc_phenometrics_cube(cshd_cube, engine, config):
+    peak_metric = config['peak_metric']
+    base_metric = config['base_metric']
+    method = config['method']
+    factor = config['factor']
+    thresh_sides = config['thresh_sides']
+    abs_value = config['abs_value']
+    if engine=='phenolopy':
+        list_series = cshd_cube.keys()
+        list_pheno = []
+        for ts in list_series:
+            ds = phenolopy_calc_phenometrics(da=cshd_cube[ts], peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
+            list_pheno.append(ds)
+        return list_pheno
+    
 def download_stream(file_path: str, response, chunk_size=1024*64, progress=True, offset=0, total_size=None):
     """Download request stream data to disk.
 
@@ -155,11 +170,10 @@ def cshd_cube(timeseries, start_date, freq):
         dates_datetime64 = pd.date_range(pd.to_datetime(start_date, format='%Y-%m-%d'), periods=len(np_array), freq=freq)
         data_xr = xr.DataArray(np_array, coords = {'time': dates_datetime64})
         list_da.append(data_xr)
-    print(list_da)
-    #data_cube = xr.combine_by_coords(list_da)   
-    #return data_cube
-
-    #Could not find any dimension coordinates to use to order the datasets for concatenation
+    dict_cube = {}
+    for index, element in enumerate(list_da):
+        dict_cube[index] = element
+    return xr.Dataset(dict_cube)
 
 def get_phenometrics(cube, geom, engine, config):
 
