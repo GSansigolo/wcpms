@@ -22,7 +22,8 @@ print(evi_array)
 ds_phenos = calc_phenometrics(
     da=evi_array,
     engine='phenolopy',
-    config=config
+    config=config,
+    start_date='2019-01-01'
 )
 
 print(ds_phenos)

@@ -2,10 +2,10 @@ from cshd import cube_query, get_timeseries
 
 S2_cube = cube_query(
     collection="S2-16D-2",
-    start_date="2021-01-01",
-    end_date="2021-12-31",
+    start_date="2020-01-01",
+    end_date="2020-12-31",
     freq='16D',
-    bands=["EVI"]
+    bands=["NDVI"]
 )
 
 print(S2_cube)

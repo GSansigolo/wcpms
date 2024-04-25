@@ -1,7 +1,7 @@
 
 import urllib
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from .phenolopy import calc_phenometrics as phenolopy_calc_phenometrics
 from pystac_client import Client
 from tqdm import tqdm
@@ -61,7 +61,7 @@ def get_timeseries(cube, geom):
         data_json = data.json()
         return data_json['result']
 
-def params_phenometrics(peak_metric='pos', base_metric='bse', method='first_of_slope', factor=0.5, thresh_sides='two_sided', abs_value=0, format= None):
+def params_phenometrics(peak_metric='pos', base_metric='bse', method='first_of_slope', factor=0.5, thresh_sides='two_sided', abs_value=0, format=None):
     return dict(
         peak_metric=peak_metric, 
         base_metric=base_metric, 
@@ -72,7 +72,7 @@ def params_phenometrics(peak_metric='pos', base_metric='bse', method='first_of_s
         format=format
     )
 
-def calc_phenometrics(da, engine, config):
+def calc_phenometrics(da, engine, config, start_date):
     peak_metric = config['peak_metric']
     base_metric = config['base_metric']
     method = config['method']
@@ -87,17 +87,17 @@ def calc_phenometrics(da, engine, config):
             return ds_phenos
         else:
             return dict(
-                sos_t=ds_phenos['sos_times'].values[()],
-                pos_t=ds_phenos['pos_times'].values[()], 
-                eos_t=ds_phenos['eos_times'].values[()],
-                vos_t=ds_phenos['vos_times'].values[()],
                 sos_v=ds_phenos['sos_values'].values[()],
+                sos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
                 pos_v=ds_phenos['pos_values'].values[()], 
+                pos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
+                vos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
                 vos_v=ds_phenos['vos_values'].values[()],
+                eos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
                 eos_v=ds_phenos['eos_values'].values[()],
-        )
+            )
 
-def calc_phenometrics_cube(cshd_cube, engine, config):
+def calc_phenometrics_cube(cshd_cube, engine, config, start_date):
     peak_metric = config['peak_metric']
     base_metric = config['base_metric']
     method = config['method']
@@ -115,15 +115,15 @@ def calc_phenometrics_cube(cshd_cube, engine, config):
                 list_pheno.append(ds_phenos)
             else:
                 list_pheno.append(dict(
-                    sos_t=ds_phenos['sos_times'].values[()],
-                    pos_t=ds_phenos['pos_times'].values[()], 
-                    eos_t=ds_phenos['eos_times'].values[()],
-                    vos_t=ds_phenos['vos_times'].values[()],
                     sos_v=ds_phenos['sos_values'].values[()],
+                    sos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
                     pos_v=ds_phenos['pos_values'].values[()], 
-                    vos_v=ds_phenos['vos_values'].values[()],
+                    pos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
                     eos_v=ds_phenos['eos_values'].values[()],
-            ))
+                    eos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
+                    vos_v=ds_phenos['vos_values'].values[()],
+                    vos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
+                ))
         return list_pheno
     
 def download_stream(file_path: str, response, chunk_size=1024*64, progress=True, offset=0, total_size=None):
@@ -219,7 +219,7 @@ def cshd_cube(timeseries, start_date, freq):
     return xr.Dataset(dict_cube)
 
 def get_phenometrics(cube, geom, engine, config):
-
+    
     data = get_timeseries(
         cube=cube, 
         geom=geom
@@ -234,10 +234,8 @@ def get_phenometrics(cube, geom, engine, config):
     ds_phenos = calc_phenometrics(
         da=data_array,
         engine=engine,
-        config=config
+        config=config,
+        start_date=cube['start_date']
     )
 
-    return dict(
-        phenometrics = ds_phenos, 
-        timeseries = data_array
-    )
+    return dict(phenometrics = ds_phenos, timeseries = data)

@@ -25,7 +25,8 @@ print(evi_cube)
 ds_phenos = calc_phenometrics_cube(
     cshd_cube=evi_cube,
     engine='phenolopy',
-    config=config
+    config=config,
+    start_date='2019-01-01'
 )
 
 print(ds_phenos)
