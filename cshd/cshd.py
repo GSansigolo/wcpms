@@ -40,12 +40,7 @@ def cube_query(collection, start_date, end_date, freq, bands=None):
 
 def get_timeseries(cube, geom):
     dataset = []
-    total_process_bar = len(geom)
-    progress = 0
     for point in geom:
-        progress += 1
-        progress_bar = int(progress/total_process_bar*100)
-        print("|"+ "=" * progress_bar+ " " * (100-progress_bar)+"| " +  str(progress_bar) + "%")
         query = dict(
             coverage=cube['collection'],
             attributes=','.join(cube['bands']),
@@ -55,7 +50,6 @@ def get_timeseries(cube, geom):
             longitude=point['coordinates'][0],
         )
         url_suffix = '/time_series?'+urllib.parse.urlencode(query)
-        print(url_wtss + url_suffix)
         data = requests.get(url_wtss + url_suffix) 
         #dataset =
         data_json = data.json()
@@ -87,14 +81,14 @@ def calc_phenometrics(da, engine, config, start_date):
             return ds_phenos
         else:
             return dict(
-                sos_v=ds_phenos['sos_values'].values[()],
+                sos_v=float(ds_phenos['sos_values'].values[()]),
                 sos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
-                pos_v=ds_phenos['pos_values'].values[()], 
+                pos_v=float(ds_phenos['pos_values'].values[()]), 
                 pos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
+                vos_v=float(ds_phenos['vos_values'].values[()]),
                 vos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
-                vos_v=ds_phenos['vos_values'].values[()],
+                eos_v=float(ds_phenos['eos_values'].values[()]),
                 eos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
-                eos_v=ds_phenos['eos_values'].values[()],
             )
 
 def calc_phenometrics_cube(cshd_cube, engine, config, start_date):
@@ -115,14 +109,14 @@ def calc_phenometrics_cube(cshd_cube, engine, config, start_date):
                 list_pheno.append(ds_phenos)
             else:
                 list_pheno.append(dict(
-                    sos_v=ds_phenos['sos_values'].values[()],
+                    sos_v=float(ds_phenos['sos_values'].values[()]),
                     sos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
-                    pos_v=ds_phenos['pos_values'].values[()], 
+                    pos_v=float(ds_phenos['pos_values'].values[()]), 
                     pos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
-                    eos_v=ds_phenos['eos_values'].values[()],
-                    eos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
-                    vos_v=ds_phenos['vos_values'].values[()],
+                    vos_v=float(ds_phenos['vos_values'].values[()]),
                     vos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
+                    eos_v=float(ds_phenos['eos_values'].values[()]),
+                    eos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
                 ))
         return list_pheno
     
