@@ -55,15 +55,14 @@ def get_timeseries(cube, geom):
         data_json = data.json()
         return data_json['result']
 
-def params_phenometrics(peak_metric='pos', base_metric='bse', method='first_of_slope', factor=0.5, thresh_sides='two_sided', abs_value=0, format=None):
+def params_phenometrics(peak_metric='pos', base_metric='bse', method='first_of_slope', factor=0.5, thresh_sides='two_sided', abs_value=0):
     return dict(
         peak_metric=peak_metric, 
         base_metric=base_metric, 
         method=method, 
         factor=factor, 
         thresh_sides=thresh_sides, 
-        abs_value=abs_value,
-        format=format
+        abs_value=abs_value
     )
 
 def calc_phenometrics(da, engine, config, start_date):
@@ -73,14 +72,20 @@ def calc_phenometrics(da, engine, config, start_date):
     factor = config['factor']
     thresh_sides = config['thresh_sides']
     abs_value = config['abs_value']
-    format = config['format']
 
     if engine=='phenolopy':
         ds_phenos = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
-        if format=='full':
-            return ds_phenos
-        else:
-            return dict(
+        return dict(
+                mos_v=float(ds_phenos['mos_values'].values[()]),
+                roi_v=float(ds_phenos['roi_values'].values[()]),
+                rod_v=float(ds_phenos['rod_values'].values[()]),
+                lios_v=float(ds_phenos['lios_values'].values[()]),
+                sios_v=float(ds_phenos['sios_values'].values[()]),
+                liot_va=float(ds_phenos['liot_values'].values[()]),
+                siot_v=float(ds_phenos['siot_values'].values[()]),
+                aos_v=float(ds_phenos['aos_values'].values[()]),
+                bse_v=float(ds_phenos['bse_values'].values[()]),
+                los_v=float(ds_phenos['los_values'].values[()]),
                 sos_v=float(ds_phenos['sos_values'].values[()]),
                 sos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
                 pos_v=float(ds_phenos['pos_values'].values[()]), 
@@ -98,26 +103,33 @@ def calc_phenometrics_cube(cshd_cube, engine, config, start_date):
     factor = config['factor']
     thresh_sides = config['thresh_sides']
     abs_value = config['abs_value']
-    format = config['format']
 
     if engine=='phenolopy':
         list_series = cshd_cube.keys()
         list_pheno = []
         for ts in list_series:
             ds_phenos = phenolopy_calc_phenometrics(da=cshd_cube[ts], peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
-            if format=='full':
-                list_pheno.append(ds_phenos)
-            else:
-                list_pheno.append(dict(
-                    sos_v=float(ds_phenos['sos_values'].values[()]),
-                    sos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
-                    pos_v=float(ds_phenos['pos_values'].values[()]), 
-                    pos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
-                    vos_v=float(ds_phenos['vos_values'].values[()]),
-                    vos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
-                    eos_v=float(ds_phenos['eos_values'].values[()]),
-                    eos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
-                ))
+            list_pheno.append(dict(
+                mos_v=float(ds_phenos['mos_values'].values[()]),
+                roi_v=float(ds_phenos['roi_values'].values[()]),
+                rod_v=float(ds_phenos['rod_values'].values[()]),
+                lios_v=float(ds_phenos['lios_values'].values[()]),
+                sios_v=float(ds_phenos['sios_values'].values[()]),
+                liot_va=float(ds_phenos['liot_values'].values[()]),
+                siot_v=float(ds_phenos['siot_values'].values[()]),
+                aos_v=float(ds_phenos['aos_values'].values[()]),
+                bse_v=float(ds_phenos['bse_values'].values[()]),
+                los_v=float(ds_phenos['los_values'].values[()]),
+                sos_v=float(ds_phenos['sos_values'].values[()]),
+                sos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
+                pos_v=float(ds_phenos['pos_values'].values[()]), 
+                pos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
+                vos_v=float(ds_phenos['vos_values'].values[()]),
+                vos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
+                eos_v=float(ds_phenos['eos_values'].values[()]),
+                eos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
+            ))
+
         return list_pheno
     
 def download_stream(file_path: str, response, chunk_size=1024*64, progress=True, offset=0, total_size=None):
