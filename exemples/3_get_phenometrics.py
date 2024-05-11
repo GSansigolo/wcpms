@@ -16,7 +16,7 @@ S2_cube = cube_query(
     start_date="2020-01-01",
     end_date="2020-12-31",
     freq='16D',
-    bands=["NDVI"]
+    band="NDVI"
 )
 
 print(S2_cube)
@@ -25,8 +25,8 @@ ds_phenos = get_phenometrics(
     cube=S2_cube,
     geom=[dict(coordinates = [-52.4538803100586, -13.68668633547038 ])],
     engine='phenolopy',
+    smooth_method='savitsky',
     config=config
 )
 
 print(ds_phenos)
-

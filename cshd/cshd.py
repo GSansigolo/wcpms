@@ -4,6 +4,7 @@ import requests
 from datetime import datetime, timedelta
 from .phenolopy import calc_phenometrics as phenolopy_calc_phenometrics
 from pystac_client import Client
+from scipy.signal import savgol_filter
 from tqdm import tqdm
 import xarray as xr
 import pandas as pd
@@ -14,7 +15,7 @@ import zipfile
 url_wtss = 'https://brazildatacube.dpi.inpe.br/wtss'
 url_stac = 'https://data.inpe.br/bdc/stac/v1/'
 
-def cube_query(collection, start_date, end_date, freq, bands=None):
+def cube_query(collection, start_date, end_date, freq, band=None):
     """An object that contains the information associated with a collection 
     that can be downloaded or acessed.
 
@@ -27,12 +28,12 @@ def cube_query(collection, start_date, end_date, freq, bands=None):
 
         freq String containing the frequency of images of the associated collection. Following (days)D structure. 
 
-        bands : Optional, list of string containing the bands id.
+        band : Optional, string containing the bands id.
     """
 
     return dict(
         collection = collection,
-        bands = bands,
+        band = band,
         start_date = start_date,
         end_date = end_date,
         freq=freq
@@ -43,7 +44,7 @@ def get_timeseries(cube, geom):
     for point in geom:
         query = dict(
             coverage=cube['collection'],
-            attributes=','.join(cube['bands']),
+            attributes=cube['band'],
             start_date=cube['start_date'],
             end_date=cube['end_date'],
             latitude=point['coordinates'][1],
@@ -53,10 +54,17 @@ def get_timeseries(cube, geom):
         data = requests.get(url_wtss + url_suffix) 
         #dataset =
         data_json = data.json()
-        return data_json['result']
+        return dict(values=np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32), timeline = data_json['result']['timeline'])
 
-def get_timeseries_cshd_cube(cube, geom):
-    band_ts = cube.sel(x=geom[0]['coordinates'][1], y=geom[0]['coordinates'][1], method='nearest')['band_data'].values
+def smooth_timeseries(ts, method='savitsky', window_length=3, polyorder=1):
+
+    if (method=='savitsky'):
+        smooth_ts = savgol_filter(x=ts, window_length=window_length, polyorder=polyorder)
+
+    return np.array(smooth_ts, dtype=np.float32)
+
+def get_timeseries_cshd_dataset(cube, geom):
+    band_ts = cube.sel(x=geom[0]['coordinates'][0], y=geom[0]['coordinates'][1], method='nearest')['band_data'].values
     timeline = cube.coords['time'].values
     ts = []
     for value in band_ts:
@@ -104,7 +112,7 @@ def calc_phenometrics(da, engine, config, start_date):
                 eos_t=(datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00"), 
             )
 
-def calc_phenometrics_cube(cshd_cube, engine, config, start_date):
+def calc_phenometrics_cube(cshd_dataset, engine, config, start_date):
     peak_metric = config['peak_metric']
     base_metric = config['base_metric']
     method = config['method']
@@ -113,10 +121,10 @@ def calc_phenometrics_cube(cshd_cube, engine, config, start_date):
     abs_value = config['abs_value']
 
     if engine=='phenolopy':
-        list_series = cshd_cube.keys()
+        list_series = cshd_dataset.keys()
         list_pheno = []
         for ts in list_series:
-            ds_phenos = phenolopy_calc_phenometrics(da=cshd_cube[ts], peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
+            ds_phenos = phenolopy_calc_phenometrics(da=cshd_dataset[ts], peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
             list_pheno.append(dict(
                 mos_v=float(ds_phenos['mos_values'].values[()]),
                 roi_v=float(ds_phenos['roi_values'].values[()]),
@@ -220,7 +228,7 @@ def cshd_array(timeserie, start_date, freq):
     data_xr = xr.DataArray(np_serie, coords = {'time': dates_datetime64})
     return data_xr
 
-def cshd_cube(timeseries, start_date, freq):
+def cshd_dataset(timeseries, start_date, freq):
     list_da = []
     for ts in timeseries:
         np_array = np.array(ts, dtype=np.float32)
@@ -232,7 +240,7 @@ def cshd_cube(timeseries, start_date, freq):
         dict_cube[index] = element
     return xr.Dataset(dict_cube)
 
-def get_phenometrics(cube, geom, engine, config):
+def get_phenometrics(cube, geom, engine, smooth_method, config):
             
     if len(geom)>1:
         
@@ -243,16 +251,19 @@ def get_phenometrics(cube, geom, engine, config):
                 cube=cube, 
                 geom=[point]
             )
-            ts_list.append(ts['attributes'][0]['values'])
+            if smooth_method=='None':
+                ts_list.append(ts['values'])
+            if smooth_method=='savitsky':
+                ts_list.append(smooth_timeseries(ts['values'], method='savitsky'))
 
-        data_array = cshd_cube(
+        data_array = cshd_dataset(
             timeseries=ts_list,
             start_date=cube['start_date'],
             freq=cube['freq']
         )
 
         ds_phenos = calc_phenometrics_cube(
-            cshd_cube=data_array,
+            cshd_dataset=data_array,
             engine='phenolopy',
             config=config,
             start_date=cube['start_date'],
@@ -267,11 +278,19 @@ def get_phenometrics(cube, geom, engine, config):
             geom=geom
         )
 
-        data_array = cshd_array(
-            timeserie=data['attributes'][0]['values'],
-            start_date=cube['start_date'],
-            freq=cube['freq']
-        )
+        if smooth_method=='None':
+            data_array = cshd_array(
+                timeserie=data['values'],
+                start_date=cube['start_date'],
+                freq=cube['freq']
+            )
+
+        if smooth_method=='savitsky':
+            data_array = cshd_array(
+                timeserie=smooth_timeseries(data['values'], method='savitsky'),
+                start_date=cube['start_date'],
+                freq=cube['freq']
+            )   
 
         ds_phenos = calc_phenometrics(
             da=data_array,
@@ -279,5 +298,5 @@ def get_phenometrics(cube, geom, engine, config):
             config=config,
             start_date=cube['start_date']
         )
-
+            
     return dict(phenometrics = ds_phenos, timeseries = data)

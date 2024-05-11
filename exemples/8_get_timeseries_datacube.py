@@ -1,4 +1,4 @@
-from cshd import cshd_img_cube, get_timeseries_cshd_cube
+from cshd import cshd_img_cube, get_timeseries_cshd_dataset
 import os
 
 path_dir = os.path.dirname(__file__)
@@ -9,7 +9,7 @@ S2_NDVI_cube = cshd_img_cube(
 
 print(S2_NDVI_cube)
 
-data = get_timeseries_cshd_cube(
+data = get_timeseries_cshd_dataset(
     cube=S2_NDVI_cube, 
     geom=[dict(coordinates = [5792005., 9947195.])]
 )
