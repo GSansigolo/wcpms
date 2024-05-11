@@ -3,11 +3,11 @@ import os
 
 path_dir = os.path.dirname(__file__)
 
-ndvi_data_cube = cshd_img_cube(
+S2_NDVI_cube = cshd_img_cube(
     data_dir=os.path.join(path_dir,'images/')
 )
 
-print(ndvi_data_cube)
+print(S2_NDVI_cube)
 
 config = params_phenometrics(
     peak_metric='pos', 
@@ -20,7 +20,7 @@ config = params_phenometrics(
 )
 
 ds_phenos = calc_phenometrics(
-    da=ndvi_data_cube['band_data'],
+    da=S2_NDVI_cube['band_data'],
     engine='phenolopy',
     config=config,
     start_date='2019-01-01'

@@ -55,6 +55,14 @@ def get_timeseries(cube, geom):
         data_json = data.json()
         return data_json['result']
 
+def get_timeseries_cshd_cube(cube, geom):
+    band_ts = cube.sel(x=geom[0]['coordinates'][1], y=geom[0]['coordinates'][1], method='nearest')['band_data'].values
+    timeline = cube.coords['time'].values
+    ts = []
+    for value in band_ts:
+        ts.append(value[0])
+    return dict(values=np.array(ts, dtype=np.float32), timeline= timeline)
+
 def params_phenometrics(peak_metric='pos', base_metric='bse', method='first_of_slope', factor=0.5, thresh_sides='two_sided', abs_value=0):
     return dict(
         peak_metric=peak_metric, 
@@ -225,23 +233,51 @@ def cshd_cube(timeseries, start_date, freq):
     return xr.Dataset(dict_cube)
 
 def get_phenometrics(cube, geom, engine, config):
+            
+    if len(geom)>1:
+        
+        ts_list = []
+
+        for point in geom:
+            ts = get_timeseries(
+                cube=cube, 
+                geom=[point]
+            )
+            ts_list.append(ts['attributes'][0]['values'])
+
+        data_array = cshd_cube(
+            timeseries=ts_list,
+            start_date=cube['start_date'],
+            freq=cube['freq']
+        )
+
+        ds_phenos = calc_phenometrics_cube(
+            cshd_cube=data_array,
+            engine='phenolopy',
+            config=config,
+            start_date=cube['start_date'],
+        )
+
+        data = ts_list
+        
+    else:
     
-    data = get_timeseries(
-        cube=cube, 
-        geom=geom
-    )
+        data = get_timeseries(
+            cube=cube, 
+            geom=geom
+        )
 
-    data_array = cshd_array(
-        timeserie=data['attributes'][0]['values'],
-        start_date=cube['start_date'],
-        freq=cube['freq']
-    )
+        data_array = cshd_array(
+            timeserie=data['attributes'][0]['values'],
+            start_date=cube['start_date'],
+            freq=cube['freq']
+        )
 
-    ds_phenos = calc_phenometrics(
-        da=data_array,
-        engine=engine,
-        config=config,
-        start_date=cube['start_date']
-    )
+        ds_phenos = calc_phenometrics(
+            da=data_array,
+            engine=engine,
+            config=config,
+            start_date=cube['start_date']
+        )
 
     return dict(phenometrics = ds_phenos, timeseries = data)
