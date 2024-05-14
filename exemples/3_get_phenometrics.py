@@ -26,6 +26,8 @@ ds_phenos = get_phenometrics(
     geom=[dict(coordinates = [-52.4538803100586, -13.68668633547038 ])],
     engine='phenolopy',
     smooth_method='savitsky',
+    cloud_filter = True,
+    interpolate = True,
     config=config
 )
 
