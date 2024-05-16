@@ -3,7 +3,6 @@ import urllib
 import requests
 from datetime import datetime, timedelta
 from .phenolopy import calc_phenometrics as phenolopy_calc_phenometrics
-from pystac_client import Client
 from scipy.signal import savgol_filter
 from scipy import interpolate as scipy_interpolate
 from tqdm import tqdm
@@ -12,6 +11,12 @@ import pandas as pd
 import numpy as np
 import os, glob
 import zipfile
+import fiona
+import pointpats
+from shapely.geometry import shape
+from shapely.prepared import prep
+from shapely import Point
+
 
 url_wtss = 'https://brazildatacube.dpi.inpe.br/wtss'
 url_stac = 'https://data.inpe.br/bdc/stac/v1/'
@@ -250,13 +255,13 @@ def download_stream(file_path: str, response, chunk_size=1024*64, progress=True,
         print(f'Download file is corrupt. Expected {total_size} bytes, got {file_size}')
      
 def download(collection, start_date, end_date, bbox):
-    stac = Client.open(url_stac)
-    item_search = stac.search(bbox=bbox, collections=[collection],  datetime=start_date+'/'+end_date)
-    if not os.path.exists('zip'):
+    #stac = Client.open(url_stac)
+    #item_search = stac.search(bbox=bbox, collections=[collection],  datetime=start_date+'/'+end_date)
+    #if not os.path.exists('zip'):
         os.makedirs('zip')
-    for item in item_search.items():
-        response = requests.get(item.assets["asset"].href, stream=True)
-        download_stream(os.path.basename(item.assets["asset"].href), response, total_size=item.to_dict()['assets']["asset"]["bdc:size"])
+    #for item in item_search.items():
+        #response = requests.get(item.assets["asset"].href, stream=True)
+        #download_stream(os.path.basename(item.assets["asset"].href), response, total_size=item.to_dict()['assets']["asset"]["bdc:size"])
 
 def unzip():
     for z in glob.glob("*.zip"):
@@ -376,3 +381,59 @@ def interpolate_array(array):
     f = scipy_interpolate.interp1d(inds[good],array[good],bounds_error=False)
     return_array = np.where(np.isfinite(array),array,f(inds))
     return return_array
+
+def generate_grid_from_shapefile(shapefile_dir, grid_type, plot_size=None, distance=None):
+    with fiona.open(os.path.join(shapefile_dir)) as shapefile:
+        for record in shapefile:
+            geometry = shape(record['geometry'])
+
+            if(grid_type == 'random'):
+                return pointpats.random.poisson(geometry, size=plot_size)
+            
+            if(grid_type == 'systematic'):
+                points_gs = gen_n_point_in_polygon(None, distance, geometry)
+                return points_gs
+
+def gen_n_point_in_polygon(self, n_point, polygon, tol = 0.1):
+    """
+    -----------
+    Description
+    -----------
+    Generate n regular spaced points within a shapely Polygon geometry
+    -----------
+    Parameters
+    -----------
+    - n_point (int) : number of points required
+    - polygon (shapely.geometry.polygon.Polygon) : Polygon geometry
+    - tol (float) : spacing tolerance (Default is 0.1)
+    -----------
+    Returns
+    -----------
+    - points (list) : generated point geometries
+    -----------
+    Examples
+    -----------
+    >>> geom_pts = gen_n_point_in_polygon(200, polygon)
+    >>> points_gs = gpd.GeoSeries(geom_pts)
+    >>> points_gs.plot()
+    """
+    # Get the bounds of the polygon
+    minx, miny, maxx, maxy = polygon.bounds    
+    # ---- Initialize spacing and point counter
+    spacing = polygon.area / n_point
+    point_counter = 0
+    # Start while loop to find the better spacing according to tolérance increment
+    while point_counter <= n_point:
+        # --- Generate grid point coordinates
+        x = np.arange(np.floor(minx), int(np.ceil(maxx)), spacing)
+        y = np.arange(np.floor(miny), int(np.ceil(maxy)), spacing)
+        xx, yy = np.meshgrid(x,y)
+        # ----
+        pts = [Point(X,Y) for X,Y in zip(xx.ravel(),yy.ravel())]
+        # ---- Keep only points in polygons
+        points = [pt for pt in pts if pt.within(polygon)]
+        # ---- Verify number of point generated
+        point_counter = len(points)
+        spacing -= tol
+    # ---- Return
+    return np.array([[pt.x,pt.y] for pt in points])
