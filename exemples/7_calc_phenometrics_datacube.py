@@ -4,7 +4,7 @@ import os
 path_dir = os.path.dirname(__file__)
 
 S2_NDVI_cube = cshd_img_cube(
-    data_dir=os.path.join(path_dir,'images/')
+    data_dir=os.path.join(path_dir,'notebooks','025038/')
 )
 
 print(S2_NDVI_cube)
@@ -16,14 +16,14 @@ config = params_phenometrics(
     factor=0.2, 
     thresh_sides='two_sided', 
     abs_value=0.1,
-    format='full'
+    date_format='full'
 )
 
 ds_phenos = calc_phenometrics(
     da=S2_NDVI_cube['band_data'],
     engine='phenolopy',
     config=config,
-    start_date='2019-01-01'
+    start_date='2023-01-01'
 )
 
 print(ds_phenos)

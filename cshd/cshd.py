@@ -16,7 +16,9 @@ import pointpats
 from shapely.geometry import shape
 from shapely.prepared import prep
 from shapely import Point
-
+import matplotlib.pyplot as plt
+import pandas as pd
+from datetime import datetime
 
 url_wtss = 'https://brazildatacube.dpi.inpe.br/wtss'
 url_stac = 'https://data.inpe.br/bdc/stac/v1/'
@@ -135,6 +137,7 @@ def calc_phenometrics(da, engine, config, start_date):
 
     if engine=='phenolopy':
         ds_phenos = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
+        print(ds_phenos)
         if date_format == 'yyyy-mm-dd': 
             sos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00")
             pos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00")
@@ -296,7 +299,7 @@ def cshd_array(timeserie, start_date, freq):
 def cshd_dataset(timeseries, start_date, freq):
     list_da = []
     for ts in timeseries:
-        np_array = np.array(ts, dtype=np.float32)
+        np_array = np.array(ts['values'], dtype=np.float32)
         dates_datetime64 = pd.date_range(pd.to_datetime(start_date, format='%Y-%m-%d'), periods=len(np_array), freq=freq)
         data_xr = xr.DataArray(np_array, coords = {'time': dates_datetime64})
         list_da.append(data_xr)
@@ -322,9 +325,9 @@ def get_phenometrics(cube, geom, engine, smooth_method, config, cloud_filter=Non
                 ts['values'] = interpolate_array(ts['values'])
 
             if smooth_method=='None':
-                ts_list.append(ts['values'])
+                ts_list.append(dict(values=ts['values'], timeline=ts['timeline']))
             if smooth_method=='savitsky':
-                ts_list.append(smooth_timeseries(ts['values'], method='savitsky'))
+                ts_list.append(dict(values=smooth_timeseries(ts['values'], method='savitsky'), timeline=ts['timeline']))
 
         data_array = cshd_dataset(
             timeseries=ts_list,
@@ -361,7 +364,7 @@ def get_phenometrics(cube, geom, engine, smooth_method, config, cloud_filter=Non
 
         if smooth_method=='savitsky':
             data_array = cshd_array(
-                timeserie=smooth_timeseries(ts['values'], method='savitsky'),
+                timeserie=smooth_timeseries(data['values'], method='savitsky'),
                 start_date=cube['start_date'],
                 freq=cube['freq']
             )   
@@ -437,3 +440,35 @@ def gen_n_point_in_polygon(self, n_point, polygon, tol = 0.1):
         spacing -= tol
     # ---- Return
     return np.array([[pt.x,pt.y] for pt in points])
+
+def plot_pheno(cube, ds_phenos):
+    dates_datetime64 = pd.date_range(pd.to_datetime(cube['start_date'], format='%Y-%m-%d'), periods=len(ds_phenos['timeseries']["timeline"]), freq="16D")
+
+    y_new = smooth_timeseries(ts=ds_phenos['timeseries']['values'], method='savitsky', window_length=2)
+
+    plt.plot(dates_datetime64, ds_phenos['timeseries']['values'], color='blue', label='Raw NDVI') 
+    plt.plot(dates_datetime64, y_new, color='red', label='Smooth NDVI') 
+
+    p = ds_phenos["phenometrics"]
+
+    sos_time = datetime.strptime(p['sos_t'], '%Y-%m-%dT00:00:00')
+    plt.plot(sos_time, p['sos_v'], 'go', label='_nolegend_')
+    plt.annotate('SOS', [sos_time, p['sos_v']])
+
+    eos_time = datetime.strptime(p['eos_t'], '%Y-%m-%dT00:00:00')
+    plt.plot(eos_time, p['eos_v'], 'go', label='_nolegend_')
+    plt.annotate('EOS', [eos_time, p['eos_v']])
+
+    pos_time = datetime.strptime(p['pos_t'], '%Y-%m-%dT00:00:00')
+    plt.plot(pos_time, p['pos_v'], 'go', label='_nolegend_')
+    plt.annotate('POS', [pos_time, p['pos_v']])
+
+    vos_time = datetime.strptime(p['vos_t'], '%Y-%m-%dT00:00:00')
+    plt.plot(vos_time, p['vos_v'], 'go', label='_nolegend_')
+    plt.annotate('VOS', [vos_time, p['vos_v']])
+
+    plt.axvspan(sos_time, eos_time, color='#9af8ff')
+
+    plt.ylabel('Vegetation Health (NDVI)')
+    plt.xlabel('Date')
+    plt.legend(loc="upper right")

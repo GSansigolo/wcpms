@@ -12,7 +12,7 @@ print(S2_cube)
 
 ts = get_timeseries(
     cube=S2_cube, 
-    geom=[dict(coordinates = [-49.64745052305557,-11.826432686977938])],
+    geom=[dict(coordinates = [-52.47134616677471,-13.67705998895876])],
     cloud_filter = True
 )
 

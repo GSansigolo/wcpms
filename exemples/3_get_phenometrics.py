@@ -23,7 +23,7 @@ print(S2_cube)
 
 ds_phenos = get_phenometrics(
     cube=S2_cube,
-    geom=[dict(coordinates = [-52.4538803100586, -13.68668633547038 ])],
+    geom=[dict(coordinates = [-52.47134616677471,-13.67705998895876])],
     engine='phenolopy',
     smooth_method='savitsky',
     cloud_filter = True,
