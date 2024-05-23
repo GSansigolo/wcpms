@@ -4,7 +4,7 @@ import os
 path_dir = os.path.dirname(__file__)
 
 S2_NDVI_cube = cshd_img_cube(
-    data_dir=os.path.join(path_dir,'025038/')
+    data_dir=os.path.join(path_dir,'notebooks','025038/')
 )
 
 print(S2_NDVI_cube)

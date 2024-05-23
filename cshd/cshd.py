@@ -77,8 +77,10 @@ def get_timeseries(cube, geom, cloud_filter=None):
         url_suffix = '/time_series?'+urllib.parse.urlencode(query)
         data = requests.get(url_wtss + url_suffix) 
         data_json = data.json()
-        ts = np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32)
-
+        if data_json['result'] and data_json['result']['attributes'] and data_json['result']['attributes'][0]['values']:
+            ts = np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32)
+        else:
+            ts = []
         if cloud_filter:
             cloud = cloud_dict[cube['collection']]
             cloud_query = dict(
@@ -92,12 +94,16 @@ def get_timeseries(cube, geom, cloud_filter=None):
             cloud_url_suffix = '/time_series?'+urllib.parse.urlencode(cloud_query)
             cloud_data = requests.get(url_wtss + cloud_url_suffix) 
             cloud_data_json = cloud_data.json()
-            cloud_array = create_filter_array(np.array(cloud_data_json['result']['attributes'][0]['values']), cloud['cloud_values'], cloud['non_cloud_values'])
-            ts = np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32)
-            nan = np.nan
-            ts = ts*cloud_array
-            ts[ts==0]=nan
-
+            if (data_json['result'] and data_json['result']['attributes'] and data_json['result']['attributes'][0]['values']):
+                cloud_array = create_filter_array(np.array(cloud_data_json['result']['attributes'][0]['values']), cloud['cloud_values'], cloud['non_cloud_values'])
+                ts = np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32)
+                nan = np.nan
+                ts = ts*cloud_array
+                ts[ts==0]=nan
+            else:
+                cloud_array = []
+                ts = []
+           
         return dict(values=ts, timeline = data_json['result']['timeline'])
 
 def smooth_timeseries(ts, method='savitsky', window_length=3, polyorder=1):
@@ -134,40 +140,59 @@ def calc_phenometrics(da, engine, config, start_date):
     thresh_sides = config['thresh_sides']
     abs_value = config['abs_value']
     date_format = config['date_format']
+    nan = np.nan
 
     if engine=='phenolopy':
         ds_phenos = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
         print(ds_phenos)
         if date_format == 'yyyy-mm-dd': 
-            sos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00")
-            pos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00")
-            vos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00")
-            eos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00")
+            sos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['sos_times'])==1 else nan
+            pos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['pos_times'])==1 else nan
+            vos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['vos_times'])==1 else nan
+            eos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['eos_times'])==1 else nan
         else:
-            sos_t = int(ds_phenos['sos_times'].values[()])
-            pos_t = int(ds_phenos['pos_times'].values[()])
-            vos_t = int(ds_phenos['vos_times'].values[()])
-            eos_t = int(ds_phenos['eos_times'].values[()])
+            sos_t = int(ds_phenos['sos_times'].values[()]) if len(ds_phenos['sos_times'])==1 else nan
+            pos_t = int(ds_phenos['pos_times'].values[()]) if len(ds_phenos['pos_times'])==1 else nan
+            vos_t = int(ds_phenos['vos_times'].values[()]) if len(ds_phenos['vos_times'])==1 else nan
+            eos_t = int(ds_phenos['eos_times'].values[()]) if len(ds_phenos['eos_times'])==1 else nan
+        mos_v=float(ds_phenos['mos_values'].values[()]) if len(ds_phenos['mos_values'])==1 else nan
+        roi_v=float(ds_phenos['roi_values'].values[()]) if len(ds_phenos['roi_values'])==1 else nan
+        rod_v=float(ds_phenos['rod_values'].values[()]) if len(ds_phenos['rod_values'])==1 else nan
+        lios_v=float(ds_phenos['lios_values'].values[()]) if len(ds_phenos['lios_values'])==1 else nan
+        sios_v=float(ds_phenos['sios_values'].values[()]) if len(ds_phenos['sios_values'])==1 else nan
+        liot_va=float(ds_phenos['liot_values'].values[()]) if len(ds_phenos['liot_values'])==1 else nan
+        siot_v=float(ds_phenos['siot_values'].values[()]) if len(ds_phenos['siot_values'])==1 else nan
+        aos_v=float(ds_phenos['aos_values'].values[()]) if len(ds_phenos['aos_values'])==1 else nan
+        bse_v=float(ds_phenos['bse_values'].values[()]) if len(ds_phenos['bse_values'])==1 else nan
+        los_v=float(ds_phenos['los_values'].values[()]) if len(ds_phenos['los_values'])==1 else nan
+        sos_v=float(ds_phenos['sos_values'].values[()]) if len(ds_phenos['sos_values'])==1 else nan
+        sos_t=sos_t
+        pos_v=float(ds_phenos['pos_values'].values[()]) if len(ds_phenos['pos_values'])==1 else nan 
+        pos_t=pos_t
+        vos_v=float(ds_phenos['vos_values'].values[()]) if len(ds_phenos['vos_values'])==1 else nan
+        vos_t=vos_t
+        eos_v=float(ds_phenos['eos_values'].values[()]) if len(ds_phenos['eos_values'])==1 else nan
+        eos_t=eos_t
         return dict(
-                mos_v=float(ds_phenos['mos_values'].values[()]),
-                roi_v=float(ds_phenos['roi_values'].values[()]),
-                rod_v=float(ds_phenos['rod_values'].values[()]),
-                lios_v=float(ds_phenos['lios_values'].values[()]),
-                sios_v=float(ds_phenos['sios_values'].values[()]),
-                liot_va=float(ds_phenos['liot_values'].values[()]),
-                siot_v=float(ds_phenos['siot_values'].values[()]),
-                aos_v=float(ds_phenos['aos_values'].values[()]),
-                bse_v=float(ds_phenos['bse_values'].values[()]),
-                los_v=float(ds_phenos['los_values'].values[()]),
-                sos_v=float(ds_phenos['sos_values'].values[()]),
-                sos_t=sos_t,
-                pos_v=float(ds_phenos['pos_values'].values[()]), 
-                pos_t=pos_t, 
-                vos_v=float(ds_phenos['vos_values'].values[()]),
-                vos_t=vos_t, 
-                eos_v=float(ds_phenos['eos_values'].values[()]),
-                eos_t=eos_t, 
-            )
+            mos_v=mos_v,
+            roi_v=roi_v,
+            rod_v=rod_v,
+            lios_v=lios_v,
+            sios_v=sios_v,
+            liot_va=liot_va,
+            siot_v=siot_v,
+            aos_v=aos_v,
+            bse_v=bse_v,
+            los_v=los_v,
+            sos_v=sos_v,
+            sos_t=sos_t,
+            pos_v=pos_v, 
+            pos_t=pos_t, 
+            vos_v=vos_v,
+            vos_t=vos_t, 
+            eos_v=eos_v,
+            eos_t=eos_t, 
+        )
 
 def calc_phenometrics_cube(cshd_dataset, engine, config, start_date):
     peak_metric = config['peak_metric']
@@ -177,6 +202,7 @@ def calc_phenometrics_cube(cshd_dataset, engine, config, start_date):
     thresh_sides = config['thresh_sides']
     abs_value = config['abs_value']
     date_format = config['date_format']
+    nan = np.nan
 
     if engine=='phenolopy':
         list_series = cshd_dataset.keys()
@@ -184,35 +210,53 @@ def calc_phenometrics_cube(cshd_dataset, engine, config, start_date):
         for ts in list_series:
             ds_phenos = phenolopy_calc_phenometrics(da=cshd_dataset[ts], peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
             if date_format == 'yyyy-mm-dd': 
-                sos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00")
-                pos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00")
-                vos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00")
-                eos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00")
-            else:
-                sos_t = int(ds_phenos['sos_times'].values[()])
-                pos_t = int(ds_phenos['pos_times'].values[()])
-                vos_t = int(ds_phenos['vos_times'].values[()])
-                eos_t = int(ds_phenos['eos_times'].values[()])
+                sos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['sos_times'])==1 else nan
+                pos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['pos_times'])==1 else nan
+                vos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['vos_times'])==1 else nan
+                eos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['eos_times'])==1 else nan
+            else: 
+                sos_t = int(ds_phenos['sos_times'].values[()]) if len(ds_phenos['sos_times'])==1 else nan
+                pos_t = int(ds_phenos['pos_times'].values[()]) if len(ds_phenos['pos_times'])==1 else nan
+                vos_t = int(ds_phenos['vos_times'].values[()]) if len(ds_phenos['vos_times'])==1 else nan
+                eos_t = int(ds_phenos['eos_times'].values[()]) if len(ds_phenos['eos_times'])==1 else nan
+            mos_v=float(ds_phenos['mos_values'].values[()]) if len(ds_phenos['mos_values'])==1 else nan
+            roi_v=float(ds_phenos['roi_values'].values[()]) if len(ds_phenos['roi_values'])==1 else nan
+            rod_v=float(ds_phenos['rod_values'].values[()]) if len(ds_phenos['rod_values'])==1 else nan
+            lios_v=float(ds_phenos['lios_values'].values[()]) if len(ds_phenos['lios_values'])==1 else nan
+            sios_v=float(ds_phenos['sios_values'].values[()]) if len(ds_phenos['sios_values'])==1 else nan
+            liot_va=float(ds_phenos['liot_values'].values[()]) if len(ds_phenos['liot_values'])==1 else nan
+            siot_v=float(ds_phenos['siot_values'].values[()]) if len(ds_phenos['siot_values'])==1 else nan
+            aos_v=float(ds_phenos['aos_values'].values[()]) if len(ds_phenos['aos_values'])==1 else nan
+            bse_v=float(ds_phenos['bse_values'].values[()]) if len(ds_phenos['bse_values'])==1 else nan
+            los_v=float(ds_phenos['los_values'].values[()]) if len(ds_phenos['los_values'])==1 else nan
+            sos_v=float(ds_phenos['sos_values'].values[()]) if len(ds_phenos['sos_values'])==1 else nan
+            sos_t=sos_t
+            pos_v=float(ds_phenos['pos_values'].values[()]) if len(ds_phenos['pos_values'])==1 else nan 
+            pos_t=pos_t 
+            vos_v=float(ds_phenos['vos_values'].values[()]) if len(ds_phenos['vos_values'])==1 else nan
+            vos_t=vos_t 
+            eos_v=float(ds_phenos['eos_values'].values[()]) if len(ds_phenos['eos_values'])==1 else nan
+            eos_t=eos_t
             list_pheno.append(dict(
-                    mos_v=float(ds_phenos['mos_values'].values[()]),
-                    roi_v=float(ds_phenos['roi_values'].values[()]),
-                    rod_v=float(ds_phenos['rod_values'].values[()]),
-                    lios_v=float(ds_phenos['lios_values'].values[()]),
-                    sios_v=float(ds_phenos['sios_values'].values[()]),
-                    liot_va=float(ds_phenos['liot_values'].values[()]),
-                    siot_v=float(ds_phenos['siot_values'].values[()]),
-                    aos_v=float(ds_phenos['aos_values'].values[()]),
-                    bse_v=float(ds_phenos['bse_values'].values[()]),
-                    los_v=float(ds_phenos['los_values'].values[()]),
-                    sos_v=float(ds_phenos['sos_values'].values[()]),
-                    sos_t=sos_t,
-                    pos_v=float(ds_phenos['pos_values'].values[()]), 
-                    pos_t=pos_t, 
-                    vos_v=float(ds_phenos['vos_values'].values[()]),
-                    vos_t=vos_t, 
-                    eos_v=float(ds_phenos['eos_values'].values[()]),
-                    eos_t=eos_t, 
-                ))
+                mos_v=mos_v,
+                roi_v=roi_v,
+                rod_v=rod_v,
+                lios_v=lios_v,
+                sios_v=sios_v,
+                liot_va=liot_va,
+                siot_v=siot_v,
+                aos_v=aos_v,
+                bse_v=bse_v,
+                los_v=los_v,
+                sos_v=sos_v,
+                sos_t=sos_t,
+                pos_v=pos_v, 
+                pos_t=pos_t, 
+                vos_v=vos_v,
+                vos_t=vos_t, 
+                eos_v=eos_v,
+                eos_t=eos_t, 
+            ))
             
         return list_pheno
     
@@ -379,6 +423,8 @@ def get_phenometrics(cube, geom, engine, smooth_method, config, cloud_filter=Non
     return dict(phenometrics = ds_phenos, timeseries = data)
 
 def interpolate_array(array):
+    if len(array) == 0:
+        return []
     inds = np.arange(array.shape[0])
     good = np.where(np.isfinite(array))
     f = scipy_interpolate.interp1d(inds[good],array[good],bounds_error=False)
