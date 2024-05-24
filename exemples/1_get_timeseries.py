@@ -16,4 +16,4 @@ ts = get_timeseries(
     cloud_filter = True
 )
 
-print(ts)
+print(ts['values'])
