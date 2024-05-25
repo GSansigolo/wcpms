@@ -77,34 +77,46 @@ def get_timeseries(cube, geom, cloud_filter=None):
         url_suffix = '/time_series?'+urllib.parse.urlencode(query)
         data = requests.get(url_wtss + url_suffix) 
         data_json = data.json()
-        if data_json['result'] and data_json['result']['attributes'] and data_json['result']['attributes'][0]['values']:
-            ts = np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32)
+        if data.status_code:
+            if data_json and data_json['result'] and data_json['result']['attributes'] and data_json['result']['attributes'][0]['values']:
+                ts = np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32)
+                timeline = data_json['result']['timeline']
+            else:
+                ts = []
+                timeline = []
         else:
             ts = []
+            timeline = []
+
         if cloud_filter:
-            cloud = cloud_dict[cube['collection']]
-            cloud_query = dict(
-                coverage=cube['collection'],
-                attributes=cloud['cloud_band'],
-                start_date=cube['start_date'],
-                end_date=cube['end_date'],
-                latitude=point['coordinates'][1],
-                longitude=point['coordinates'][0],
-            )
-            cloud_url_suffix = '/time_series?'+urllib.parse.urlencode(cloud_query)
-            cloud_data = requests.get(url_wtss + cloud_url_suffix) 
-            cloud_data_json = cloud_data.json()
-            if (data_json['result'] and data_json['result']['attributes'] and data_json['result']['attributes'][0]['values']):
-                cloud_array = create_filter_array(np.array(cloud_data_json['result']['attributes'][0]['values']), cloud['cloud_values'], cloud['non_cloud_values'])
-                ts = np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32)
-                nan = np.nan
-                ts = ts*cloud_array
-                ts[ts==0]=nan
+            if data.status_code:
+                cloud = cloud_dict[cube['collection']]
+                cloud_query = dict(
+                    coverage=cube['collection'],
+                    attributes=cloud['cloud_band'],
+                    start_date=cube['start_date'],
+                    end_date=cube['end_date'],
+                    latitude=point['coordinates'][1],
+                    longitude=point['coordinates'][0],
+                )
+                cloud_url_suffix = '/time_series?'+urllib.parse.urlencode(cloud_query)
+                cloud_data = requests.get(url_wtss + cloud_url_suffix) 
+                cloud_data_json = cloud_data.json()
+                if (data_json and data_json['result'] and data_json['result']['attributes'] and data_json['result']['attributes'][0]['values']):
+                    cloud_array = create_filter_array(np.array(cloud_data_json['result']['attributes'][0]['values']), cloud['cloud_values'], cloud['non_cloud_values'])
+                    ts = np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32)
+                    nan = np.nan
+                    ts = ts*cloud_array
+                    ts[ts==0]=nan
+                else:
+                    cloud_array = []
+                    ts = []
+                    timeline = []
             else:
                 cloud_array = []
                 ts = []
-           
-        return dict(values=ts, timeline = data_json['result']['timeline'])
+                timeline = []
+        return dict(values=ts, timeline = timeline)
 
 def smooth_timeseries(ts, method='savitsky', window_length=3, polyorder=1):
 
