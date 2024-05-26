@@ -6,8 +6,8 @@ path_dir = os.path.dirname(__file__)
 
 S2_cube = cube_query(
     collection="S2-16D-2",
-    start_date="2021-01-01",
-    end_date="2021-12-31",
+    start_date="2023-01-01",
+    end_date="2023-12-31",
     freq='16D',
     band="NDVI"
 )
@@ -43,14 +43,14 @@ with open(os.path.join(path_dir, "train.csv"),'r') as csvinput:
             print('Timeseries fetched')
             ndvi_array = cshd_array(
                 timeserie=smooth_timeseries(ts['values'], method='savitsky'),
-                start_date='2021-01-01',
+                start_date='2023-01-01',
                 freq='16D'
             )
             ds_phenos = calc_phenometrics(
                 da=ndvi_array,
                 engine='phenolopy',
                 config=config,
-                start_date='2021-01-01'
+                start_date='2023-01-01'
             )
             print('Phenometrics fetched')
             row.append(ds_phenos)
