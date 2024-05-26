@@ -21,8 +21,8 @@ config = params_phenometrics(
     abs_value=0.1
 )
 
-with open(os.path.join(path_dir, "train.csv"),'r') as csvinput:
-    with open(os.path.join(path_dir, "train_ts.csv"), 'w') as csvoutput:
+with open(os.path.join(path_dir, "train2.csv"),'r') as csvinput:
+    with open(os.path.join(path_dir, "train_ts2.csv"), 'w') as csvoutput:
         writer = csv.writer(csvoutput, lineterminator='\n')
         reader = csv.reader(csvinput)
 

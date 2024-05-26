@@ -1,5 +1,5 @@
 geometry,label_id,label_name,label,collection_date,created_at,end_date,id,start_date,updated_at,user_email,user_name,longitude,latitude,timeline
-POINT (-53.405914 -33.707669),370,soja,Soja,2024-05-16T00:00:00Z,16-05-2024,31-12-2023,2,01-01-2023,16-05-2024,gabrielsansigolo@gmail.com,gabriel,-53.405914,-33.707669,[
+POINT (-53.405914 -33.707669),370,soja,Soja,2024-05-16T00:00:00Z,16-05-2024,31-12-2023,2,01-01-2023,16-05-2024,gabrielsansigolo@gmail.com,gabriel,-53.405914,-33.707669,
 POINT (-53.402138 -33.703992),370,soja,Soja,2024-05-16T00:00:00Z,16-05-2024,31-12-2023,3,01-01-2023,16-05-2024,gabrielsansigolo@gmail.com,gabriel,-53.402138,-33.703992,
 POINT (-53.408017 -33.704777),370,soja,Soja,2024-05-16T00:00:00Z,16-05-2024,31-12-2023,4,01-01-2023,16-05-2024,gabrielsansigolo@gmail.com,gabriel,-53.408017,-33.704777,
 POINT (-53.406129 -33.701671),370,soja,Soja,2024-05-16T00:00:00Z,16-05-2024,31-12-2023,5,01-01-2023,16-05-2024,gabrielsansigolo@gmail.com,gabriel,-53.406129,-33.701671,
