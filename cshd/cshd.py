@@ -158,32 +158,32 @@ def calc_phenometrics(da, engine, config, start_date):
         ds_phenos = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
         print(ds_phenos)
         if date_format == 'yyyy-mm-dd': 
-            sos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['sos_times'])==1 else nan
-            pos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['pos_times'])==1 else nan
-            vos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['vos_times'])==1 else nan
-            eos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['eos_times'])==1 else nan
+            sos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['sos_times'].values[()]) == False else nan
+            pos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['pos_times'].values[()]) == False else nan
+            vos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['vos_times'].values[()]) == False else nan
+            eos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['eos_times'].values[()]) == False else nan
         else:
-            sos_t = int(ds_phenos['sos_times'].values[()]) if len(ds_phenos['sos_times'])==1 else nan
-            pos_t = int(ds_phenos['pos_times'].values[()]) if len(ds_phenos['pos_times'])==1 else nan
-            vos_t = int(ds_phenos['vos_times'].values[()]) if len(ds_phenos['vos_times'])==1 else nan
-            eos_t = int(ds_phenos['eos_times'].values[()]) if len(ds_phenos['eos_times'])==1 else nan
-        mos_v=float(ds_phenos['mos_values'].values[()]) if len(ds_phenos['mos_values'])==1 else nan
-        roi_v=float(ds_phenos['roi_values'].values[()]) if len(ds_phenos['roi_values'])==1 else nan
-        rod_v=float(ds_phenos['rod_values'].values[()]) if len(ds_phenos['rod_values'])==1 else nan
-        lios_v=float(ds_phenos['lios_values'].values[()]) if len(ds_phenos['lios_values'])==1 else nan
-        sios_v=float(ds_phenos['sios_values'].values[()]) if len(ds_phenos['sios_values'])==1 else nan
-        liot_va=float(ds_phenos['liot_values'].values[()]) if len(ds_phenos['liot_values'])==1 else nan
-        siot_v=float(ds_phenos['siot_values'].values[()]) if len(ds_phenos['siot_values'])==1 else nan
-        aos_v=float(ds_phenos['aos_values'].values[()]) if len(ds_phenos['aos_values'])==1 else nan
-        bse_v=float(ds_phenos['bse_values'].values[()]) if len(ds_phenos['bse_values'])==1 else nan
-        los_v=float(ds_phenos['los_values'].values[()]) if len(ds_phenos['los_values'])==1 else nan
-        sos_v=float(ds_phenos['sos_values'].values[()]) if len(ds_phenos['sos_values'])==1 else nan
+            sos_t = int(ds_phenos['sos_times'].values[()]) if np.isnan(ds_phenos['sos_times'].values[()]) == False else nan
+            pos_t = int(ds_phenos['pos_times'].values[()]) if np.isnan(ds_phenos['pos_times'].values[()]) == False else nan
+            vos_t = int(ds_phenos['vos_times'].values[()]) if np.isnan(ds_phenos['vos_times'].values[()]) == False else nan
+            eos_t = int(ds_phenos['eos_times'].values[()]) if np.isnan(ds_phenos['eos_times'].values[()]) == False else nan
+        mos_v=float(ds_phenos['mos_values'].values[()]) if np.isnan(ds_phenos['mos_values'].values[()]) == False else nan
+        roi_v=float(ds_phenos['roi_values'].values[()]) if np.isnan(ds_phenos['roi_values'].values[()]) == False else nan
+        rod_v=float(ds_phenos['rod_values'].values[()]) if np.isnan(ds_phenos['rod_values'].values[()]) == False else nan
+        lios_v=float(ds_phenos['lios_values'].values[()]) if np.isnan(ds_phenos['lios_values'].values[()]) == False else nan
+        sios_v=float(ds_phenos['sios_values'].values[()]) if np.isnan(ds_phenos['sios_values'].values[()]) == False else nan
+        liot_va=float(ds_phenos['liot_values'].values[()]) if np.isnan(ds_phenos['liot_values'].values[()]) == False else nan
+        siot_v=float(ds_phenos['siot_values'].values[()]) if np.isnan(ds_phenos['siot_values'].values[()]) == False else nan
+        aos_v=float(ds_phenos['aos_values'].values[()]) if np.isnan(ds_phenos['aos_values'].values[()]) == False else nan
+        bse_v=float(ds_phenos['bse_values'].values[()]) if np.isnan(ds_phenos['bse_values'].values[()]) == False else nan
+        los_v=float(ds_phenos['los_values'].values[()]) if np.isnan(ds_phenos['los_values'].values[()]) == False else nan
+        sos_v=float(ds_phenos['sos_values'].values[()]) if np.isnan(ds_phenos['sos_values'].values[()]) == False else nan
         sos_t=sos_t
-        pos_v=float(ds_phenos['pos_values'].values[()]) if len(ds_phenos['pos_values'])==1 else nan 
+        pos_v=float(ds_phenos['pos_values'].values[()]) if np.isnan(ds_phenos['pos_values'].values[()]) == False else nan 
         pos_t=pos_t
-        vos_v=float(ds_phenos['vos_values'].values[()]) if len(ds_phenos['vos_values'])==1 else nan
+        vos_v=float(ds_phenos['vos_values'].values[()]) if np.isnan(ds_phenos['vos_values'].values[()]) == False else nan
         vos_t=vos_t
-        eos_v=float(ds_phenos['eos_values'].values[()]) if len(ds_phenos['eos_values'])==1 else nan
+        eos_v=float(ds_phenos['eos_values'].values[()]) if np.isnan(ds_phenos['eos_values'].values[()]) == False else nan
         eos_t=eos_t
         return dict(
             mos_v=mos_v,
@@ -222,32 +222,32 @@ def calc_phenometrics_cube(cshd_dataset, engine, config, start_date):
         for ts in list_series:
             ds_phenos = phenolopy_calc_phenometrics(da=cshd_dataset[ts], peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
             if date_format == 'yyyy-mm-dd': 
-                sos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['sos_times'])==1 else nan
-                pos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['pos_times'])==1 else nan
-                vos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['vos_times'])==1 else nan
-                eos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if len(ds_phenos['eos_times'])==1 else nan
+                sos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['sos_times'].values[()]) == False else nan
+                pos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['pos_times'].values[()]) == False else nan
+                vos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['vos_times'].values[()]) == False else nan
+                eos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['eos_times'].values[()]) == False else nan
             else: 
-                sos_t = int(ds_phenos['sos_times'].values[()]) if len(ds_phenos['sos_times'])==1 else nan
-                pos_t = int(ds_phenos['pos_times'].values[()]) if len(ds_phenos['pos_times'])==1 else nan
-                vos_t = int(ds_phenos['vos_times'].values[()]) if len(ds_phenos['vos_times'])==1 else nan
-                eos_t = int(ds_phenos['eos_times'].values[()]) if len(ds_phenos['eos_times'])==1 else nan
-            mos_v=float(ds_phenos['mos_values'].values[()]) if len(ds_phenos['mos_values'])==1 else nan
-            roi_v=float(ds_phenos['roi_values'].values[()]) if len(ds_phenos['roi_values'])==1 else nan
-            rod_v=float(ds_phenos['rod_values'].values[()]) if len(ds_phenos['rod_values'])==1 else nan
-            lios_v=float(ds_phenos['lios_values'].values[()]) if len(ds_phenos['lios_values'])==1 else nan
-            sios_v=float(ds_phenos['sios_values'].values[()]) if len(ds_phenos['sios_values'])==1 else nan
-            liot_va=float(ds_phenos['liot_values'].values[()]) if len(ds_phenos['liot_values'])==1 else nan
-            siot_v=float(ds_phenos['siot_values'].values[()]) if len(ds_phenos['siot_values'])==1 else nan
-            aos_v=float(ds_phenos['aos_values'].values[()]) if len(ds_phenos['aos_values'])==1 else nan
-            bse_v=float(ds_phenos['bse_values'].values[()]) if len(ds_phenos['bse_values'])==1 else nan
-            los_v=float(ds_phenos['los_values'].values[()]) if len(ds_phenos['los_values'])==1 else nan
-            sos_v=float(ds_phenos['sos_values'].values[()]) if len(ds_phenos['sos_values'])==1 else nan
+                sos_t = int(ds_phenos['sos_times'].values[()]) if np.isnan(ds_phenos['sos_times'].values[()]) == False else nan
+                pos_t = int(ds_phenos['pos_times'].values[()]) if np.isnan(ds_phenos['pos_times'].values[()]) == False else nan
+                vos_t = int(ds_phenos['vos_times'].values[()]) if np.isnan(ds_phenos['vos_times'].values[()]) == False else nan
+                eos_t = int(ds_phenos['eos_times'].values[()]) if np.isnan(ds_phenos['eos_times'].values[()]) == False else nan
+            mos_v=float(ds_phenos['mos_values'].values[()]) if np.isnan(ds_phenos['mos_values'].values[()]) == False else nan
+            roi_v=float(ds_phenos['roi_values'].values[()]) if np.isnan(ds_phenos['roi_values'].values[()]) == False else nan
+            rod_v=float(ds_phenos['rod_values'].values[()]) if np.isnan(ds_phenos['rod_values'].values[()]) == False else nan
+            lios_v=float(ds_phenos['lios_values'].values[()]) if np.isnan(ds_phenos['lios_values'].values[()]) == False else nan
+            sios_v=float(ds_phenos['sios_values'].values[()]) if np.isnan(ds_phenos['sios_values'].values[()]) == False else nan
+            liot_va=float(ds_phenos['liot_values'].values[()]) if np.isnan(ds_phenos['liot_values'].values[()]) == False else nan
+            siot_v=float(ds_phenos['siot_values'].values[()]) if np.isnan(ds_phenos['siot_values'].values[()]) == False else nan
+            aos_v=float(ds_phenos['aos_values'].values[()]) if np.isnan(ds_phenos['aos_values'].values[()]) == False else nan
+            bse_v=float(ds_phenos['bse_values'].values[()]) if np.isnan(ds_phenos['bse_values'].values[()]) == False else nan
+            los_v=float(ds_phenos['los_values'].values[()]) if np.isnan(ds_phenos['los_values'].values[()]) == False else nan
+            sos_v=float(ds_phenos['sos_values'].values[()]) if np.isnan(ds_phenos['sos_values'].values[()]) == False else nan
             sos_t=sos_t
-            pos_v=float(ds_phenos['pos_values'].values[()]) if len(ds_phenos['pos_values'])==1 else nan 
+            pos_v=float(ds_phenos['pos_values'].values[()]) if np.isnan(ds_phenos['pos_values'].values[()]) == False else nan 
             pos_t=pos_t 
-            vos_v=float(ds_phenos['vos_values'].values[()]) if len(ds_phenos['vos_values'])==1 else nan
+            vos_v=float(ds_phenos['vos_values'].values[()]) if np.isnan(ds_phenos['vos_values'].values[()]) == False else nan
             vos_t=vos_t 
-            eos_v=float(ds_phenos['eos_values'].values[()]) if len(ds_phenos['eos_values'])==1 else nan
+            eos_v=float(ds_phenos['eos_values'].values[()]) if np.isnan(ds_phenos['eos_values'].values[()]) == False else nan
             eos_t=eos_t
             list_pheno.append(dict(
                 mos_v=mos_v,
