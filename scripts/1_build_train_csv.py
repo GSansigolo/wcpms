@@ -1,6 +1,7 @@
 import os
 import csv
 from cshd import cube_query, get_timeseries, params_phenometrics, calc_phenometrics, cshd_array, smooth_timeseries
+import time
 
 path_dir = os.path.dirname(__file__)
 
@@ -21,8 +22,8 @@ config = params_phenometrics(
     abs_value=0.1
 )
 
-with open(os.path.join(path_dir, "train2.csv"),'r') as csvinput:
-    with open(os.path.join(path_dir, "train_ts2.csv"), 'w') as csvoutput:
+with open(os.path.join(path_dir, "train.csv"),'r') as csvinput:
+    with open(os.path.join(path_dir, "train_ts.csv"), 'w') as csvoutput:
         writer = csv.writer(csvoutput, lineterminator='\n')
         reader = csv.reader(csvinput)
 
@@ -40,6 +41,7 @@ with open(os.path.join(path_dir, "train2.csv"),'r') as csvinput:
               cloud_filter = True
             )
             row.append(ts['values'])
+            print(ts['values'])
             print('Timeseries fetched')
             ndvi_array = cshd_array(
                 timeserie=smooth_timeseries(ts['values'], method='savitsky'),

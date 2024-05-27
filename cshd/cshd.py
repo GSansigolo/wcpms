@@ -20,8 +20,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime
 
-url_wtss = 'https://brazildatacube.dpi.inpe.br/wtss'
-url_stac = 'https://data.inpe.br/bdc/stac/v1/'
+url_wtss = 'https://data.inpe.br/bdc/wtss/v4'
+url_stac = 'https://data.inpe.br/bdc/stac/v1'
 cloud_dict = {
     'S2-16D-2':{
         'cloud_band': 'SCL',
@@ -75,13 +75,14 @@ def get_timeseries(cube, geom, cloud_filter=None):
             longitude=point['coordinates'][0],
         )
         url_suffix = '/time_series?'+urllib.parse.urlencode(query)
+        #print(url_wtss + url_suffix)
         data = requests.get(url_wtss + url_suffix) 
         data_json = data.json()
         if data.status_code:
-            if data_json and data_json['result'] and data_json['result']['attributes'] and data_json['result']['attributes'][0]['values']:
+            try:
                 ts = np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32)
                 timeline = data_json['result']['timeline']
-            else:
+            except:
                 ts = []
                 timeline = []
         else:
@@ -102,18 +103,17 @@ def get_timeseries(cube, geom, cloud_filter=None):
                 cloud_url_suffix = '/time_series?'+urllib.parse.urlencode(cloud_query)
                 cloud_data = requests.get(url_wtss + cloud_url_suffix) 
                 cloud_data_json = cloud_data.json()
-                if (data_json and data_json['result'] and data_json['result']['attributes'] and data_json['result']['attributes'][0]['values']):
+                try:
                     cloud_array = create_filter_array(np.array(cloud_data_json['result']['attributes'][0]['values']), cloud['cloud_values'], cloud['non_cloud_values'])
                     ts = np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32)
                     nan = np.nan
                     ts = ts*cloud_array
                     ts[ts==0]=nan
-                else:
+                except:
                     cloud_array = []
                     ts = []
                     timeline = []
             else:
-                cloud_array = []
                 ts = []
                 timeline = []
         return dict(values=ts, timeline = timeline)
