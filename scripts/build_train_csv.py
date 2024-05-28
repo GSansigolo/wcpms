@@ -1,7 +1,6 @@
 import os
 import csv
 from cshd import cube_query, get_timeseries, params_phenometrics, calc_phenometrics, cshd_array, smooth_timeseries
-import time
 
 path_dir = os.path.dirname(__file__)
 
