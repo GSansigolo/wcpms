@@ -33,11 +33,6 @@ df = pd.read_csv(os.path.join(path_dir, 'new_train_ts.csv'))
 # shuffle data
 df = shuffle(df)
 
-for i, row in df.iterrows():
-    df.at[i,'timeseries'] = df.at[i,'timeseries'].replace("[","").replace("]","").replace(" ","").replace("'","").split(",")
-    df.at[i,'timeseries'] = [x for x in df.at[i,'timeseries'] if x]
-    df.at[i,'timeseries'] = np.asarray(df.at[i,'timeseries']).astype(np.float32) 
-
 X_train = df['timeseries'] 
 y_train = df["label_id"]
 
@@ -59,7 +54,7 @@ print(num_classes)
 
 print(train_timeseries.shape, train_labels.shape, test_timeseries.shape, test_labels.shape)
 
-T = 41  #timesteps window
+T = 23  #timesteps window
 
 #Input data for the Keras LSTM layer has 3 dimensions: (M, T, N), where
 #    M - number of examples (2D: sequences of timesteps x features),
@@ -84,7 +79,6 @@ print(f'Test data dimensions: {X_test.shape}, {y_test.shape}')
 
 # model
 
-'''
 LAYERS = [8, 8, 8, 1]                # number of units in hidden and output layers
 M_TRAIN = X_train.shape[0]           # number of training examples (2D)
 M_TEST = X_test.shape[0]             # number of test examples (2D),full=X_test.shape[0]
@@ -175,4 +169,3 @@ axs[1].plot(History.history['val_acc'], color='r', label='Validation accuracy')
 axs[1].set_title("Accuracy curves")
 axs[1].legend(loc='best', shadow=True)
 plt.show()
-'''

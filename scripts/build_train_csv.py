@@ -43,7 +43,7 @@ with open(os.path.join(path_dir, "train.csv"),'r') as csvinput:
             print(ts['values'])
             print('Timeseries fetched')
             ndvi_array = cshd_array(
-                timeserie=smooth_timeseries(ts['values'], method='savitsky'),
+                timeserie=ts['values'],
                 start_date='2023-01-01',
                 freq='16D'
             )

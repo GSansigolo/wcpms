@@ -56,7 +56,6 @@ def cube_query(collection, start_date, end_date, freq, band=None):
 
 def create_filter_array(array, filter_true, filter_false):
     filter_arr = []
-    nan = np.nan
     for element in array:
         if element in filter_true:
             filter_arr.append(0)
@@ -80,7 +79,7 @@ def get_timeseries(cube, geom, cloud_filter=None):
         data_json = data.json()
         if data.status_code:
             try:
-                ts = np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32)
+                ts = data_json['result']['attributes'][0]['values']
                 timeline = data_json['result']['timeline']
             except:
                 ts = []
@@ -101,14 +100,15 @@ def get_timeseries(cube, geom, cloud_filter=None):
                     longitude=point['coordinates'][0],
                 )
                 cloud_url_suffix = '/time_series?'+urllib.parse.urlencode(cloud_query)
+                #print(url_wtss + cloud_url_suffix)
                 cloud_data = requests.get(url_wtss + cloud_url_suffix) 
                 cloud_data_json = cloud_data.json()
                 try:
-                    cloud_array = create_filter_array(np.array(cloud_data_json['result']['attributes'][0]['values']), cloud['cloud_values'], cloud['non_cloud_values'])
-                    ts = np.array(data_json['result']['attributes'][0]['values'], dtype=np.float32)
-                    nan = np.nan
-                    ts = ts*cloud_array
-                    ts[ts==0]=nan
+                    cloud_array = create_filter_array(cloud_data_json['result']['attributes'][0]['values'], cloud['cloud_values'], cloud['non_cloud_values'])
+                    ts = data_json['result']['attributes'][0]['values']
+                    for i in range(len(ts)):
+                        if cloud_array[i] == 0:
+                            ts[i] = -9999
                 except:
                     cloud_array = []
                     ts = []
@@ -116,7 +116,7 @@ def get_timeseries(cube, geom, cloud_filter=None):
             else:
                 ts = []
                 timeline = []
-        return dict(values=ts, timeline = timeline)
+        return dict(values=ts, timeline=timeline)
 
 def smooth_timeseries(ts, method='savitsky', window_length=3, polyorder=1):
 
