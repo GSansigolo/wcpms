@@ -6,6 +6,7 @@ __pycache__/
 images/
 images_min/
 exemples/notebooks/025038
+exemples/notebooks/SCL_025038
 
 # C extensions
 *.so

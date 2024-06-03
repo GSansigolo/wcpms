@@ -14,4 +14,4 @@ data = get_timeseries_cshd_dataset(
     geom=[dict(coordinates = [5792005., 9947195.])]
 )
 
-print(data)
+print(data['values'])
