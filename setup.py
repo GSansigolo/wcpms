@@ -25,7 +25,10 @@ setup(
         "statsmodels==0.14.2",
         "datacube==1.8.18",
         "rioxarray==0.15.4",
-        "xarray==2024.3.0"
+        "xarray==2024.3.0",
+        "tqdm==4.66.4",
+        "fiona==1.9.6",
+        "pointpats==2.4.0"
     ],
     long_description = LONG_DESCRIPTION,
     setup_requires=['pytest-runner'],
