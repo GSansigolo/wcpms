@@ -5,8 +5,8 @@ __pycache__/
 .DS_Store
 images/
 images_min/
-exemples/notebooks/025038
-exemples/notebooks/SCL_025038
+exemples/notebooks/021037
+exemples/notebooks/SCL_021037
 
 # C extensions
 *.so
