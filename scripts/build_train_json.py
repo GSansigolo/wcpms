@@ -48,5 +48,5 @@ for row in df.itertuples(index=True, name='Pandas'):
     print('Phenometrics fetched') 
     timeseries_pheno_metrics.append(ts['values'] + ds_phenos)
 
-with open(os.path.join(path_dir, "timeseries_pheno_metrics.json"), 'w') as fp:
+with open(os.path.join(path_dir, "test_timeseries_pheno_metrics.json"), 'w') as fp:
     json.dump(dict(timeseries_pheno_metrics = timeseries_pheno_metrics), fp)
