@@ -156,7 +156,7 @@ def calc_phenometrics(da, engine, config, start_date):
 
     if engine=='phenolopy':
         ds_phenos = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
-        print(ds_phenos)
+        #print(ds_phenos)
         if date_format == 'yyyy-mm-dd': 
             sos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['sos_times'].values[()]) == False else -9999
             pos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['pos_times'].values[()]) == False else -9999
@@ -311,7 +311,7 @@ def download_stream(file_path: str, response, chunk_size=1024*64, progress=True,
 
     if file_size != total_size:
         os.remove(file_path)
-        print(f'Download file is corrupt. Expected {total_size} bytes, got {file_size}')
+        #print(f'Download file is corrupt. Expected {total_size} bytes, got {file_size}')
      
 def download(collection, start_date, end_date, bbox):
     #stac = Client.open(url_stac)
@@ -326,11 +326,11 @@ def unzip():
     for z in glob.glob("*.zip"):
         try:
             with zipfile.ZipFile(os.path.join(z), 'r') as zip_ref:
-                print('Unziping '+ z)
+                #print('Unziping '+ z)
                 zip_ref.extractall('unzip')
                 os.remove(z)
         except:
-            print("An exception occurred")
+            #print("An exception occurred")
             os.remove(z)
 
 def cshd_img_cube(data_dir):
@@ -437,7 +437,7 @@ def get_phenometrics(cube, geom, engine, smooth_method, config, cloud_filter=Non
 def interpolate_array(array):
     if len(array) == 0:
         return []
-    inds = np.arange(array.shape[0])
+    inds = np.arange(len(array[0]))
     good = np.where(np.isfinite(array))
     f = scipy_interpolate.interp1d(inds[good],array[good],bounds_error=False)
     return_array = np.where(np.isfinite(array),array,f(inds))

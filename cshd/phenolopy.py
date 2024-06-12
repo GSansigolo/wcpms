@@ -38,6 +38,7 @@ from scipy.ndimage import gaussian_filter
 from statsmodels.tsa.seasonal import STL as stl
 from datacube.utils.geometry import assign_crs
 
+debug_log = False
 
 def conform_dea_band_names(ds):
     """
@@ -59,7 +60,7 @@ def conform_dea_band_names(ds):
     """
     
     # notify user
-    print('Conforming satellite bands')
+    if debug_log : print('Conforming satellite bands')
     
     # check if dataset type
     if type(ds) != xr.Dataset:
@@ -100,7 +101,7 @@ def conform_dea_band_names(ds):
     ds = ds.rename(bands_to_rename)
     
     # notify user
-    print('> Satellite band names conformed successfully.\n')
+    if debug_log : print('> Satellite band names conformed successfully.\n')
     
     return ds
 
@@ -135,7 +136,7 @@ def calc_vege_index(ds, index='ndvi', drop=True):
     """
     
     # notify user
-    print('Generating vegetation index: {0}'.format(index))
+    if debug_log : print('Generating vegetation index: {0}'.format(index))
     
     # check if dataset type
     if type(ds) != xr.Dataset:
@@ -149,7 +150,7 @@ def calc_vege_index(ds, index='ndvi', drop=True):
     # get input band variables in order to drop these if drop=True
     if drop:
         bands_to_drop = list(ds.data_vars)
-        print('> Drop bands set to True. Dropping these bands: {0}'.format(bands_to_drop))
+        if debug_log : print('> Drop bands set to True. Dropping these bands: {0}'.format(bands_to_drop))
         
     # calculate vegetation index
     if index is None:
@@ -168,7 +169,7 @@ def calc_vege_index(ds, index='ndvi', drop=True):
         ds = ds.drop(bands_to_drop)
         
     # notify user
-    print('> Vegetation index calculated successfully.\n')
+    if debug_log : print('> Vegetation index calculated successfully.\n')
         
     return ds
 
@@ -207,7 +208,7 @@ def remove_outliers(ds, method='median', user_factor=2, z_pval=0.05):
     """
     
     # notify user
-    print('Outlier removal method: {0} with a user factor of: {1}'.format(method, user_factor))
+    if debug_log : print('Outlier removal method: {0} with a user factor of: {1}'.format(method, user_factor))
     
     # check if type is xr dataset
     if type(ds) != xr.Dataset:
@@ -251,12 +252,12 @@ def remove_outliers(ds, method='median', user_factor=2, z_pval=0.05):
 
             if win_size < 3:
                 win_size = 3
-                print('> Generated roll window size less than 3, setting to default (3).')
+                if debug_log : print('> Generated roll window size less than 3, setting to default (3).')
             elif win_size % 2 == 0:
                 win_size = win_size + 1
-                print('> Generated roll window size is an even number, added 1 to make it odd ({0}).'.format(win_size))
+                if debug_log : print('> Generated roll window size is an even number, added 1 to make it odd ({0}).'.format(win_size))
             else:
-                print('> Generated roll window size is: {0}'.format(win_size))
+                if debug_log : print('> Generated roll window size is: {0}'.format(win_size))
 
             # calc rolling median for whole dataset
             ds_med = ds.rolling(time=win_size, center=True).median()
@@ -307,10 +308,10 @@ def remove_outliers(ds, method='median', user_factor=2, z_pval=0.05):
         
     # check if any nans exist in dataset after resample and tell user
     if bool(ds.isnull().any()):
-        print('> Warning: dataset contains nan values. You may want to interpolate next.')
+        if debug_log : print('> Warning: dataset contains nan values. You may want to interpolate next.')
 
     # notify user
-    print('> Outlier removal successful.\n')
+    if debug_log : print('> Outlier removal successful.\n')
 
     return ds
 
@@ -339,7 +340,7 @@ def correct_last_datetime(ds, interval):
     """
     
     # notify user
-    print('Correcting last datetime value to ensure adequate resampling output.')
+    if debug_log : print('Correcting last datetime value to ensure adequate resampling output.')
 
     # check if type is xr dataset
     if type(ds) != xr.Dataset:
@@ -355,7 +356,7 @@ def correct_last_datetime(ds, interval):
 
     # correct datetime if interval not 1M
     if interval == ['1M']:
-        print('> No need to correct last datetime for monthly resampling.')
+        if debug_log : print('> No need to correct last datetime for monthly resampling.')
         return ds
 
     # get last datetime object
@@ -365,7 +366,7 @@ def correct_last_datetime(ds, interval):
     d, m, y = int(old_dt['time.day']), int(old_dt['time.month']), int(old_dt['time.year'])
     if m == 12 and d < 31:
         # notify
-        print('> Changing day of last datetime value in dataset to the 31st.')
+        if debug_log : print('> Changing day of last datetime value in dataset to the 31st.')
 
         # convert to 31st
         new_dt = '{0}-{1}-{2}'.format(y, m, 31)
@@ -376,10 +377,10 @@ def correct_last_datetime(ds, interval):
 
     else:
         # notify
-        print('> Could not change day value as month is not December or day already the 31st.')
+        if debug_log : print('> Could not change day value as month is not December or day already the 31st.')
 
     # notify and return
-    print('> Corrected late datetime value successfully.')
+    if debug_log : print('> Corrected late datetime value successfully.')
     return ds
 
 
@@ -404,7 +405,7 @@ def remove_non_dominant_year(ds):
     """
     
     # notify user
-    print('Checking and removing non-dominant year often introduced following resampling.')
+    if debug_log : print('Checking and removing non-dominant year often introduced following resampling.')
 
     # check if type is xr dataset
     if type(ds) != xr.Dataset:
@@ -423,7 +424,7 @@ def remove_non_dominant_year(ds):
         raise ValueError('> No years or more than 2 years detected in dataset. Please check your group function. Aborting.')
 
     elif len(unique_year_values) == 2:
-        print('> More than one year detected in dataset. Removal non-dominant years.')
+        if debug_log : print('> More than one year detected in dataset. Removal non-dominant years.')
 
         # get max count index and associated year
         max_count_idx = np.argmax(unique_year_counts)
@@ -436,10 +437,10 @@ def remove_non_dominant_year(ds):
         ds = ds.sortby('time')
 
     elif len(unique_year_values) == 1:
-        print('> Only 1 year detected in dataset, no datetime removal needed. Returning original dataset.')
+        if debug_log : print('> Only 1 year detected in dataset, no datetime removal needed. Returning original dataset.')
 
     # notify and return
-    print('> Checked and removed non-dominant year (if needed) successfully.')
+    if debug_log : print('> Checked and removed non-dominant year (if needed) successfully.')
     return ds
 
 
@@ -470,7 +471,7 @@ def resample(ds, interval='1M', reducer='median'):
     """
     
     # notify user
-    print('Resampling dataset interval: {0} via reducer: {1}'.format(interval, reducer))
+    if debug_log : print('Resampling dataset interval: {0} via reducer: {1}'.format(interval, reducer))
     
     # check if type is xr dataset
     if type(ds) != xr.Dataset:
@@ -501,10 +502,10 @@ def resample(ds, interval='1M', reducer='median'):
                     
     # check if any nans exist in dataset after resample and tell user
     if bool(ds.isnull().any()):
-        print('> Warning: dataset contains nan values. You should interpolate nan values next.')
+        if debug_log : print('> Warning: dataset contains nan values. You should interpolate nan values next.')
         
     # notify user
-    print('> Resample successful.\n')
+    if debug_log : print('> Resample successful.\n')
     
     return ds
 
@@ -536,7 +537,7 @@ def group(ds, group_by='month', reducer='median'):
     """
     
     # notify user
-    print('Group dataset interval: {0} via reducer: {1}'.format(group_by, reducer))
+    if debug_log : print('Group dataset interval: {0} via reducer: {1}'.format(group_by, reducer))
     
     # check if type is xr dataset
     if type(ds) != xr.Dataset:
@@ -559,7 +560,7 @@ def group(ds, group_by='month', reducer='median'):
     year = np.take(years, years.size // 2)
     
     # notify user
-    print('> Selecting year: {0} to re-label times after groupby.'.format(year))
+    if debug_log : print('> Selecting year: {0} to re-label times after groupby.'.format(year))
           
     # group based on user selected interval and reducer
     if group_by in ['week', 'month']:
@@ -588,10 +589,10 @@ def group(ds, group_by='month', reducer='median'):
     
     # check if any nans exist in dataset after resample and tell user
     if bool(ds.isnull().any()):
-        print('> Warning: dataset contains nan values. You should interpolate nan values next.')
+        if debug_log : print('> Warning: dataset contains nan values. You should interpolate nan values next.')
         
     # notify user
-    print('> Group successful.\n')
+    if debug_log : print('> Group successful.\n')
     
     return ds
 
@@ -621,7 +622,7 @@ def interpolate(ds, method='interpolate_na'):
     """
     
     # notify user
-    print('Interpolating dataset using method: {0}.'.format(method))
+    if debug_log : print('Interpolating dataset using method: {0}.'.format(method))
     
     # check if type is xr dataset
     if type(ds) != xr.Dataset:
@@ -686,10 +687,10 @@ def interpolate(ds, method='interpolate_na'):
         
     # check if any nans exist in dataset after resample and tell user
     if bool(ds.isnull().any()):
-        print('> Warning: dataset still contains nan values. The first and/or last time slices may be empty.')
+        if debug_log : print('> Warning: dataset still contains nan values. The first and/or last time slices may be empty.')
         
     # notify user
-    print('> Interpolation successful.\n')
+    if debug_log : print('> Interpolation successful.\n')
     
     return ds
 
@@ -730,7 +731,7 @@ def smooth(ds, method='savitsky', window_length=3, polyorder=1, sigma=1):
     """
     
     # notify user
-    print('Smoothing method: {0} with window length: {1} and polyorder: {2}.'.format(method, window_length, polyorder))
+    if debug_log : print('Smoothing method: {0} with window length: {1} and polyorder: {2}.'.format(method, window_length, polyorder))
     
     # check if type is xr dataset
     if type(ds) != xr.Dataset:
@@ -799,10 +800,10 @@ def smooth(ds, method='savitsky', window_length=3, polyorder=1, sigma=1):
         
     # check if any nans exist in dataset after resample and tell user
     if bool(ds.isnull().any()):
-        print('> Warning: dataset contains nan values. You may want to interpolate next.')
+        if debug_log : print('> Warning: dataset contains nan values. You may want to interpolate next.')
 
     # notify user
-    print('> Smoothing successful.\n')
+    if debug_log : print('> Smoothing successful.\n')
 
     return ds
 
@@ -827,7 +828,7 @@ def calc_num_seasons(ds):
     """
     
     # notify user
-    print('Beginning calculation of number of seasons.')
+    if debug_log : print('Beginning calculation of number of seasons.')
     
     # check if type is xr dataset
     if type(ds) != xr.Dataset:
@@ -865,7 +866,7 @@ def calc_num_seasons(ds):
             return 0
         
     # calculate nos using calc_funcs func
-    print('> Calculating number of seasons.')
+    if debug_log : print('> Calculating number of seasons.')
     da_nos = xr.apply_ufunc(calc_peaks, ds['veg_index'], 
                             input_core_dims=[['time']],
                             vectorize=True, 
@@ -879,7 +880,7 @@ def calc_num_seasons(ds):
     da_nos = da_nos.rename('num_seasons')
     
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
         
     return da_nos
  
@@ -905,7 +906,7 @@ def create_ds_template(da):
     """
     
     # notify user
-    print('Creating a dateset template to hold various phenometrics.')
+    if debug_log : print('Creating a dateset template to hold various phenometrics.')
     
     # check if data array type
     if type(da) != xr.DataArray:
@@ -946,7 +947,7 @@ def create_ds_template(da):
     })   
     
     # notify user
-    print('> Created blank dateset template successfully.\n')
+    if debug_log : print('> Created blank dateset template successfully.\n')
     
     return temp_ds
 
@@ -968,20 +969,20 @@ def extract_crs(da):
     """
     
     # notify user
-    print('Beginning extraction of CRS metadata.')
+    if debug_log : print('Beginning extraction of CRS metadata.')
     try:
         # notify user
-        print('> Extracting CRS metadata.')
+        if debug_log : print('> Extracting CRS metadata.')
         
         # extract crs metadata
         crs = da.geobox.crs
         
         # notify user
-        print('> Success!\n')
+        if debug_log : print('> Success!\n')
         
     except:
         # notify user
-        print('> No CRS metadata found. Returning None.\n')
+        if debug_log : print('> No CRS metadata found. Returning None.\n')
         crs = None       
     
     return crs
@@ -1004,20 +1005,20 @@ def add_crs(ds, crs):
     """
     
     # notify user
-    print('Beginning addition of CRS metadata.')
+    if debug_log : print('Beginning addition of CRS metadata.')
     try:
         # notify user
-        print('> Adding CRS metadata.')
+        if debug_log : print('> Adding CRS metadata.')
         
         # assign crs via odc utils
         ds = assign_crs(ds, str(crs))
         
         # notify user
-        print('> Success!\n')
+        if debug_log : print('> Success!\n')
         
     except:
         # notify user
-        print('> Could not add CRS metadata to data. Aborting.\n')
+        if debug_log : print('> Could not add CRS metadata to data. Aborting.\n')
         pass
         
     return ds
@@ -1046,14 +1047,14 @@ def get_pos(da):
     """
     
     # notify user
-    print('Beginning calculation of peak of season (pos) values and times.')   
+    if debug_log : print('Beginning calculation of peak of season (pos) values and times.')   
 
     # get pos values (max val in each pixel timeseries)
-    print('> Calculating peak of season (pos) values.')
+    if debug_log : print('> Calculating peak of season (pos) values.')
     da_pos_values = da.max('time')
         
     # get pos times (day of year) at max val in each pixel timeseries)
-    print('> Calculating peak of season (pos) times.')
+    if debug_log : print('> Calculating peak of season (pos) times.')
     i = da.argmax('time', skipna=True)
     da_pos_times = da['time.dayofyear'].isel(time=i, drop=True)
     
@@ -1066,7 +1067,7 @@ def get_pos(da):
     da_pos_times = da_pos_times.rename('pos_times')
 
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
     
     return da_pos_values, da_pos_times
 
@@ -1095,10 +1096,10 @@ def get_mos(da, da_peak_times):
     """
     
     # notify user
-    print('Beginning calculation of middle of season (mos) values (times not possible).')  
+    if debug_log : print('Beginning calculation of middle of season (mos) values (times not possible).')  
 
     # get left and right slopes values
-    print('> Calculating middle of season (mos) values.')
+    if debug_log : print('> Calculating middle of season (mos) values.')
     slope_l = da.where(da['time.dayofyear'] <= da_peak_times)
     slope_r = da.where(da['time.dayofyear'] >= da_peak_times)
         
@@ -1120,7 +1121,7 @@ def get_mos(da, da_peak_times):
     da_mos_values = da_mos_values.rename('mos_values')
 
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
     
     #return da_mos_values
     return da_mos_values
@@ -1149,14 +1150,14 @@ def get_vos(da):
     """
     
     # notify user
-    print('Beginning calculation of valley of season (vos) values and times.')
+    if debug_log : print('Beginning calculation of valley of season (vos) values and times.')
 
     # get vos values (min val in each pixel timeseries)
-    print('> Calculating valley of season (vos) values.')
+    if debug_log : print('> Calculating valley of season (vos) values.')
     da_vos_values = da.min('time')
     
     # get vos times (day of year) at min val in each pixel timeseries)
-    print('> Calculating valley of season (vos) times.')
+    if debug_log : print('> Calculating valley of season (vos) times.')
     i = da.argmin('time', skipna=True)
     da_vos_times = da['time.dayofyear'].isel(time=i, drop=True)
     
@@ -1169,7 +1170,7 @@ def get_vos(da):
     da_vos_times = da_vos_times.rename('vos_times')
 
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
     
     return da_vos_values, da_vos_times
 
@@ -1201,10 +1202,10 @@ def get_bse(da, da_peak_times):
     """
     
     # notify user
-    print('Beginning calculation of base (bse) values (times not possible).')
+    if debug_log : print('Beginning calculation of base (bse) values (times not possible).')
 
     # get vos values (min val in each pixel timeseries)
-    print('> Calculating base (bse) values.')
+    if debug_log : print('> Calculating base (bse) values.')
     
     # split timeseries into left and right slopes via provided peak/middle values
     slope_l = da.where(da['time.dayofyear'] <= da_peak_times).min('time')
@@ -1220,7 +1221,7 @@ def get_bse(da, da_peak_times):
     da_bse_values = da_bse_values.rename('bse_values')
 
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
     
     return da_bse_values
 
@@ -1249,10 +1250,10 @@ def get_aos(da_peak_values, da_base_values):
     """
     
     # notify user
-    print('Beginning calculation of amplitude of season (aos) values (times not possible).')
+    if debug_log : print('Beginning calculation of amplitude of season (aos) values (times not possible).')
 
     # get aos values (peak - base in each pixel timeseries)
-    print('> Calculating amplitude of season (aos) values.')
+    if debug_log : print('> Calculating amplitude of season (aos) values.')
     da_aos_values = da_peak_values - da_base_values
     
     # convert type
@@ -1262,7 +1263,7 @@ def get_aos(da_peak_values, da_base_values):
     da_aos_values = da_aos_values.rename('aos_values')
     
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
         
     return da_aos_values
 
@@ -1325,7 +1326,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     """
     
     # notify user
-    print('Beginning calculation of start of season (sos) values and times.')
+    if debug_log : print('Beginning calculation of start of season (sos) values and times.')
     
     # check factor
     if factor < 0 or factor > 1:
@@ -1338,7 +1339,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     if method == 'first_of_slope':
         
         # notify user
-        print('> Calculating start of season (sos) values via method: first_of_slope.')
+        if debug_log : print('> Calculating start of season (sos) values via method: first_of_slope.')
           
         # get left slopes values, calc differentials, subset to positive differentials
         slope_l = da.where(da['time.dayofyear'] <= da_peak_times)
@@ -1363,7 +1364,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
         da_sos_values = slope_l_pos.isel(time=i, drop=True)
         
         # notify user
-        print('> Calculating start of season (sos) times via method: first_of_slope.')
+        if debug_log : print('> Calculating start of season (sos) times via method: first_of_slope.')
         
         # get vege start of season times (day of year)
         da_sos_times = slope_l_pos['time.dayofyear'].isel(time=i, drop=True)
@@ -1371,7 +1372,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     elif method == 'median_of_slope':
         
         # notify user
-        print('> Calculating start of season (sos) values via method: median_of_slope.')
+        if debug_log : print('> Calculating start of season (sos) values via method: median_of_slope.')
           
         # get left slopes values, calc differentials, subset to positive differentials
         slope_l = da.where(da['time.dayofyear'] <= da_peak_times)
@@ -1397,7 +1398,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
         da_sos_values = slope_l_pos.isel(time=i, drop=True)
         
         # notify user
-        print('> Calculating start of season (sos) times via method: median_of_slope.')
+        if debug_log : print('> Calculating start of season (sos) times via method: median_of_slope.')
         
         # get vege start of season times (day of year)
         da_sos_times = slope_l_pos['time.dayofyear'].isel(time=i, drop=True)
@@ -1405,7 +1406,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     elif method == 'seasonal_amplitude':
         
         # notify user
-        print('> Calculating start of season (sos) values via method: seasonal_amplitude.')
+        if debug_log : print('> Calculating start of season (sos) values via method: seasonal_amplitude.')
         
         # get left slopes values, calc differentials, subset to positive differentials
         slope_l = da.where(da['time.dayofyear'] <= da_peak_times)
@@ -1435,7 +1436,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
         da_sos_values = slope_l_pos.isel(time=i, drop=True)
                 
         # notify user
-        print('> Calculating start of season (sos) times via method: seasonal_amplitude.')
+        if debug_log : print('> Calculating start of season (sos) times via method: seasonal_amplitude.')
         
         # get vege start of season times (day of year)
         da_sos_times = slope_l_pos['time.dayofyear'].isel(time=i, drop=True)
@@ -1443,7 +1444,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     elif method == 'absolute_value':
         
         # notify user
-        print('> Calculating start of season (sos) values via method: absolute_value.')
+        if debug_log : print('> Calculating start of season (sos) values via method: absolute_value.')
         
         # get left slopes values, calc differentials, subset to positive differentials
         slope_l = da.where(da['time.dayofyear'] <= da_peak_times)
@@ -1467,7 +1468,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
         da_sos_values = slope_l_pos.isel(time=i, drop=True)
         
         # notify user
-        print('> Calculating start of season (sos) times via method: absolute_value.')
+        if debug_log : print('> Calculating start of season (sos) times via method: absolute_value.')
         
         # get vege start of season times (day of year)
         da_sos_times = slope_l_pos['time.dayofyear'].isel(time=i, drop=True)
@@ -1475,7 +1476,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     elif method == 'relative_value':
 
         # notify user
-        print('> Calculating start of season (sos) values via method: relative_value.')
+        if debug_log : print('> Calculating start of season (sos) values via method: relative_value.')
         
         # get left slopes values, calc differentials, subset to positive differentials
         slope_l = da.where(da['time.dayofyear'] <= da_peak_times)
@@ -1508,8 +1509,8 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
         da_sos_values = slope_l_pos.isel(time=i, drop=True)
 
         # notify user
-        print('> Calculating start of season (sos) times via method: relative_value.')
-        print('> Warning: this can take a long time.')
+        if debug_log : print('> Calculating start of season (sos) times via method: relative_value.')
+        if debug_log : print('> Warning: this can take a long time.')
         
         # get vege start of season times (day of year)
         da_sos_times = slope_l_pos['time.dayofyear'].isel(time=i, drop=True)
@@ -1517,13 +1518,13 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     elif method == 'stl_trend':
         
         # notify user
-        print('> Calculating end of season (eos) values via method: stl_trend.')
+        if debug_log : print('> Calculating end of season (eos) values via method: stl_trend.')
         
         # check if num seasons for stl is odd, +1 if not
         num_periods = len(da['time'])
         if num_periods % 2 == 0:
             num_periods = num_periods + 1
-            print('> Number of stl periods is even number, added 1 to make it odd.')
+            if debug_log : print('> Number of stl periods is even number, added 1 to make it odd.')
         
         # prepare stl params
         stl_params = {
@@ -1539,7 +1540,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
             return stl(v, period=period, seasonal=seasonal, trend=trend, low_pass=low_pass, robust=robust).fit().trend
         
         # notify user
-        print('> Performing seasonal decomposition via LOESS. Warning: this can take a long time.')
+        if debug_log : print('> Performing seasonal decomposition via LOESS. Warning: this can take a long time.')
         da_stl = xr.apply_ufunc(func_stl, da, 
                                 input_core_dims=[['time']], 
                                 output_core_dims=[['time']], 
@@ -1549,7 +1550,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
                                 kwargs=stl_params)
         
         # notify user
-        print('> Calculating start of season (sos) values via method: stl_trend.')
+        if debug_log : print('> Calculating start of season (sos) values via method: stl_trend.')
         
         # get left slopes values, calc differentials, subset to positive differentials
         slope_l = da.where(da['time.dayofyear'] <= da_peak_times)
@@ -1576,7 +1577,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
         da_sos_values = slope_l_pos.isel(time=i, drop=True)
         
         # notify user
-        print('> Calculating start of season (sos) times via method: stl_trend.')
+        if debug_log : print('> Calculating start of season (sos) times via method: stl_trend.')
         
         # get vege start of season times (day of year)
         da_sos_times = slope_l_pos['time.dayofyear'].isel(time=i, drop=True)
@@ -1599,7 +1600,7 @@ def get_sos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     da_sos_times = da_sos_times.rename('sos_times')
             
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
     
     return da_sos_values, da_sos_times
 
@@ -1662,7 +1663,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     """
     
     # notify user
-    print('Beginning calculation of end of season (eos) values and times.')
+    if debug_log : print('Beginning calculation of end of season (eos) values and times.')
     
     # check factor
     if factor < 0 or factor > 1:
@@ -1675,7 +1676,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     if method == 'first_of_slope':
         
         # notify user
-        print('> Calculating end of season (eos) values via method: first_of_slope.')
+        if debug_log : print('> Calculating end of season (eos) values via method: first_of_slope.')
           
         # get right slopes values, calc differentials, subset to negative differentials
         slope_r = da.where(da['time.dayofyear'] >= da_peak_times)
@@ -1700,7 +1701,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
         da_eos_values = slope_r_neg.isel(time=i, drop=True)
         
         # notify user
-        print('> Calculating end of season (eos) times via method: first_of_slope.')
+        if debug_log : print('> Calculating end of season (eos) times via method: first_of_slope.')
         
         # get vege start of season times (day of year)
         da_eos_times = slope_r_neg['time.dayofyear'].isel(time=i, drop=True)
@@ -1708,7 +1709,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     elif method == 'median_of_slope':
         
         # notify user
-        print('> Calculating end of season (eos) values via method: median_of_slope.')
+        if debug_log : print('> Calculating end of season (eos) values via method: median_of_slope.')
           
         # get right slopes values, calc differentials, subset to positive differentials
         slope_r = da.where(da['time.dayofyear'] >= da_peak_times)
@@ -1734,7 +1735,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
         da_eos_values = slope_r_neg.isel(time=i, drop=True)
         
         # notify user
-        print('> Calculating end of season (eos) times via method: median_of_slope.')
+        if debug_log : print('> Calculating end of season (eos) times via method: median_of_slope.')
         
         # get vege end of season times (day of year)
         da_eos_times = slope_r_neg['time.dayofyear'].isel(time=i, drop=True)
@@ -1742,7 +1743,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     elif method == 'seasonal_amplitude':
         
         # notify user
-        print('> Calculating end of season (eos) values via method: seasonal_amplitude.')
+        if debug_log : print('> Calculating end of season (eos) values via method: seasonal_amplitude.')
         
         # get right slopes values, calc differentials, subset to negative differentials
         slope_r = da.where(da['time.dayofyear'] >= da_peak_times)
@@ -1772,7 +1773,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
         da_eos_values = slope_r_neg.isel(time=i, drop=True)
         
         # notify user
-        print('> Calculating end of season (eos) times via method: seasonal_amplitude.')
+        if debug_log : print('> Calculating end of season (eos) times via method: seasonal_amplitude.')
         
         # get vege end of season times (day of year)
         da_eos_times = slope_r_neg['time.dayofyear'].isel(time=i, drop=True)
@@ -1780,7 +1781,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     elif method == 'absolute_value':
         
         # notify user
-        print('> Calculating end of season (eos) values via method: absolute_value.')
+        if debug_log : print('> Calculating end of season (eos) values via method: absolute_value.')
         
         # get right slopes values, calc differentials, subset to negative differentials
         slope_r = da.where(da['time.dayofyear'] >= da_peak_times)
@@ -1804,7 +1805,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
         da_eos_values = slope_r_neg.isel(time=i, drop=True)
         
         # notify user
-        print('> Calculating end of season (eos) times via method: absolute_value.')
+        if debug_log : print('> Calculating end of season (eos) times via method: absolute_value.')
         
         # get vege end of season times (day of year)
         da_eos_times = slope_r_neg['time.dayofyear'].isel(time=i, drop=True)
@@ -1812,7 +1813,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     elif method == 'relative_value':
 
         # notify user
-        print('> Calculating end of season (eos) values via method: relative_value.')
+        if debug_log : print('> Calculating end of season (eos) values via method: relative_value.')
         
         # get right slopes values, calc differentials, subset to negative differentials
         slope_r = da.where(da['time.dayofyear'] >= da_peak_times)
@@ -1845,8 +1846,8 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
         da_eos_values = slope_r_neg.isel(time=i, drop=True)
         
         # notify user
-        print('> Calculating end of season (eos) times via method: relative_value.')
-        print('> Warning: this can take a long time.')
+        if debug_log : print('> Calculating end of season (eos) times via method: relative_value.')
+        if debug_log : print('> Warning: this can take a long time.')
         
         # get vege end of season times (day of year)
         da_eos_times = slope_r_neg['time.dayofyear'].isel(time=i, drop=True)
@@ -1854,13 +1855,13 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     elif method == 'stl_trend':
         
         # notify user
-        print('> Calculating end of season (eos) values via method: stl_trend.')
+        if debug_log : print('> Calculating end of season (eos) values via method: stl_trend.')
         
         # check if num seasons for stl is odd, +1 if not
         num_periods = len(da['time'])
         if num_periods % 2 == 0:
             num_periods = num_periods + 1
-            print('> Number of stl periods is even number, added 1 to make it odd.')
+            if debug_log : print('> Number of stl periods is even number, added 1 to make it odd.')
         
         # prepare stl params
         stl_params = {
@@ -1876,7 +1877,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
             return stl(v, period=period, seasonal=seasonal, trend=trend, low_pass=low_pass, robust=robust).fit().trend
         
         # notify user
-        print('> Performing seasonal decomposition via LOESS. Warning: this can take a long time.')
+        if debug_log : print('> Performing seasonal decomposition via LOESS. Warning: this can take a long time.')
         da_stl = xr.apply_ufunc(func_stl, da, 
                                 input_core_dims=[['time']], 
                                 output_core_dims=[['time']], 
@@ -1886,7 +1887,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
                                 kwargs=stl_params)
         
         # notify user
-        print('> Calculating end of season (eos) values via method: stl_trend.')
+        if debug_log : print('> Calculating end of season (eos) values via method: stl_trend.')
         
         # get right slopes values, calc differentials, subset to negative differentials
         slope_r = da.where(da['time.dayofyear'] >= da_peak_times)
@@ -1913,7 +1914,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
         da_eos_values = slope_r_eos.isel(time=i, drop=True)
         
         # notify user
-        print('> Calculating end of season (eos) times via method: stl_trend.')
+        if debug_log : print('> Calculating end of season (eos) times via method: stl_trend.')
         
         # get vege end of season times (day of year)
         da_eos_times = slope_r_eos['time.dayofyear'].isel(time=i, drop=True)
@@ -1936,7 +1937,7 @@ def get_eos(da, da_peak_times, da_base_values, da_aos_values, method, factor, th
     da_eos_times = da_eos_times.rename('eos_times')    
         
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
     
     return da_eos_values, da_eos_times    
 
@@ -1968,10 +1969,10 @@ def get_los(da, da_sos_times, da_eos_times):
     """
     
     # notify user
-    print('Beginning calculation of length of season (los) values (times not possible).')
+    if debug_log : print('Beginning calculation of length of season (los) values (times not possible).')
 
     # get los values (eos day of year - sos day of year)
-    print('> Calculating length of season (los) values.')
+    if debug_log : print('> Calculating length of season (los) values.')
     da_los_values = da_eos_times - da_sos_times
     
     # correct los if negative values exist
@@ -1994,7 +1995,7 @@ def get_los(da, da_sos_times, da_eos_times):
     da_los_values = da_los_values.rename('los_values')
     
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
         
     return da_los_values    
 
@@ -2031,10 +2032,10 @@ def get_roi(da_peak_values, da_peak_times, da_sos_values, da_sos_times):
     """
     
     # notify user
-    print('Beginning calculation of rate of increase (roi) values (times not possible).')   
+    if debug_log : print('Beginning calculation of rate of increase (roi) values (times not possible).')   
 
     # get ratio between the difference in peak and sos values and times
-    print('> Calculating rate of increase (roi) values.')
+    if debug_log : print('> Calculating rate of increase (roi) values.')
     da_roi_values = (da_peak_values - da_sos_values) / (da_peak_times - da_sos_times)    
 
     # convert type
@@ -2044,7 +2045,7 @@ def get_roi(da_peak_values, da_peak_times, da_sos_values, da_sos_times):
     da_roi_values = da_roi_values.rename('roi_values')
 
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
     
     return da_roi_values
 
@@ -2081,10 +2082,10 @@ def get_rod(da_peak_values, da_peak_times, da_eos_values, da_eos_times):
     """
     
     # notify user
-    print('Beginning calculation of rate of decrease (rod) values (times not possible).')   
+    if debug_log : print('Beginning calculation of rate of decrease (rod) values (times not possible).')   
 
     # get abs ratio between the difference in peak and eos values and times
-    print('> Calculating rate of decrease (rod) values.')
+    if debug_log : print('> Calculating rate of decrease (rod) values.')
     da_rod_values = abs((da_eos_values - da_peak_values) / (da_eos_times - da_peak_times))
     
     # convert type
@@ -2094,7 +2095,7 @@ def get_rod(da_peak_values, da_peak_times, da_eos_values, da_eos_times):
     da_rod_values = da_rod_values.rename('rod_values')
 
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
     
     return da_rod_values
 
@@ -2126,10 +2127,10 @@ def get_lios(da, da_sos_times, da_eos_times):
     """
     
     # notify user
-    print('Beginning calculation of long integral of season (lios) values (times not possible).')   
+    if debug_log : print('Beginning calculation of long integral of season (lios) values (times not possible).')   
 
     # get vals between sos and eos times, replace any outside vals with 0
-    print('> Calculating long integral of season (lios) values.')
+    if debug_log : print('> Calculating long integral of season (lios) values.')
     da_lios_values = da.where((da['time.dayofyear'] >= da_sos_times) &
                               (da['time.dayofyear'] <= da_eos_times), 0)
     
@@ -2147,7 +2148,7 @@ def get_lios(da, da_sos_times, da_eos_times):
     da_lios_values = da_lios_values.rename('lios_values')
     
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
         
     return da_lios_values
 
@@ -2183,10 +2184,10 @@ def get_sios(da, da_sos_times, da_eos_times, da_base_values):
     """
     
     # notify user
-    print('Beginning calculation of short integral of season (sios) values (times not possible).')   
+    if debug_log : print('Beginning calculation of short integral of season (sios) values (times not possible).')   
 
     # get veg vals between sos and eos times, replace any outside vals with 0
-    print('> Calculating short integral of season (sios) values.')
+    if debug_log : print('> Calculating short integral of season (sios) values.')
     da_sios_values = da.where((da['time.dayofyear'] >= da_sos_times) &
                               (da['time.dayofyear'] <= da_eos_times), 0)
     
@@ -2221,7 +2222,7 @@ def get_sios(da, da_sos_times, da_eos_times, da_base_values):
     da_sios_values = da_sios_values.rename('sios_values')
     
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
         
     return da_sios_values
 
@@ -2246,10 +2247,10 @@ def get_liot(da):
     """
     
     # notify user
-    print('Beginning calculation of long integral of total (liot) values (times not possible).')   
+    if debug_log : print('Beginning calculation of long integral of total (liot) values (times not possible).')   
 
     # calculate liot using trapz (note: more sophisticated than integrate)
-    print('> Calculating long integral of total (liot) values.')
+    if debug_log : print('> Calculating long integral of total (liot) values.')
     da_liot_values = xr.apply_ufunc(np.trapz, da, 
                                     input_core_dims=[['time']],
                                     dask='parallelized', 
@@ -2263,7 +2264,7 @@ def get_liot(da):
     da_liot_values = da_liot_values.rename('liot_values')
     
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
         
     return da_liot_values
 
@@ -2292,10 +2293,10 @@ def get_siot(da, da_base_values):
     """
     
     # notify user
-    print('Beginning calculation of short integral of total (siot) values (times not possible).')   
+    if debug_log : print('Beginning calculation of short integral of total (siot) values (times not possible).')   
 
     # calculate siot using trapz (note: more sophisticated than integrate)
-    print('> Calculating short integral of total (siot) values.')
+    if debug_log : print('> Calculating short integral of total (siot) values.')
     da_siot_values = xr.apply_ufunc(np.trapz, da, 
                                     input_core_dims=[['time']],
                                     dask='parallelized', 
@@ -2322,7 +2323,7 @@ def get_siot(da, da_base_values):
     da_siot_values = da_siot_values.rename('siot_values')
     
     # notify user
-    print('> Success!\n')
+    if debug_log : print('> Success!\n')
         
     return da_siot_values
     
@@ -2375,7 +2376,7 @@ def calc_phenometrics(da, peak_metric='pos', base_metric='bse', method='first_of
     """
     
     # notify user
-    print('Initialising calculation of phenometrics.\n')
+    if debug_log : print('Initialising calculation of phenometrics.\n')
     
     # check if dask - not yet supported
     if dask.is_dask_collection(da):
@@ -2404,7 +2405,7 @@ def calc_phenometrics(da, peak_metric='pos', base_metric='bse', method='first_of
     da = da.where(~da_all_nan_mask, 0.0)
     
     # notify user
-    print('Beginning calculation of phenometrics. This can take awhile - please wait.\n')
+    if debug_log : print('Beginning calculation of phenometrics. This can take awhile - please wait.\n')
     
     # calc peak of season (pos) values and times
     da_pos_values, da_pos_times = get_pos(da=da)
@@ -2514,6 +2515,6 @@ def calc_phenometrics(da, peak_metric='pos', base_metric='bse', method='first_of
     ds_phenos = add_crs(ds=ds_phenos, crs=crs)
     
     # notify user
-    print('Phenometrics calculated successfully!')
+    if debug_log : print('Phenometrics calculated successfully!')
     
     return ds_phenos

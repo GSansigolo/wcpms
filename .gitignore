@@ -4,10 +4,15 @@ __pycache__/
 *$py.class
 .DS_Store
 images/
+demos/notebooks/output
 images_min/
-exemples/notebooks/021037
-exemples/notebooks/SCL_021037
-
+demos/notebooks/021037
+demos/notebooks/SCL_021037
+test_timeseries_pheno_metrics.json
+timeseries_pheno_metrics.json
+classification.tif.aux.xml
+classification.tif
+region/
 # C extensions
 *.so
 
