@@ -36,7 +36,7 @@ ds_phenos = get_phenometrics(
     engine='phenolopy',
     smooth_method='savitsky',
     cloud_filter=True,
-    interpolate=True,
+    interpolate=False,
     config=config
 )
 

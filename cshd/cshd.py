@@ -185,26 +185,26 @@ def calc_phenometrics(da, engine, config, start_date):
         vos_t=vos_t
         eos_v=float(ds_phenos['eos_values'].values[()]) if np.isnan(ds_phenos['eos_values'].values[()]) == False else -9999
         eos_t=eos_t
-        return [
-            mos_v,
-            roi_v,
-            rod_v,
-            lios_v,
-            sios_v,
-            liot_va,
-            siot_v,
-            aos_v,
-            bse_v,
-            los_v,
-            sos_v,
-            sos_t,
-            pos_v, 
-            pos_t, 
-            vos_v,
-            vos_t, 
-            eos_v,
-            eos_t
-        ]
+        return dict(
+                mos_v=mos_v,
+                roi_v=roi_v,
+                rod_v=rod_v,
+                lios_v=lios_v,
+                sios_v=sios_v,
+                liot_va=liot_va,
+                siot_v=siot_v,
+                aos_v=aos_v,
+                bse_v=bse_v,
+                los_v=los_v,
+                sos_v=sos_v,
+                sos_t=sos_t,
+                pos_v=pos_v, 
+                pos_t=pos_t, 
+                vos_v=vos_v,
+                vos_t=vos_t, 
+                eos_v=eos_v,
+                eos_t=eos_t, 
+            )
 
 def calc_phenometrics_cube(cshd_dataset, engine, config, start_date):
     peak_metric = config['peak_metric']
