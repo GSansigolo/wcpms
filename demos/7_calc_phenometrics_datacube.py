@@ -1,9 +1,9 @@
-from cshd import cshd_img_cube, params_phenometrics, calc_phenometrics
+from wcpms import wcpms_img_cube, params_phenometrics, calc_phenometrics
 import os
 
 path_dir = os.path.dirname(__file__)
 
-S2_NDVI_cube = cshd_img_cube(
+S2_NDVI_cube = wcpms_img_cube(
     data_dir=os.path.join(path_dir,'notebooks','021037/')
 )
 

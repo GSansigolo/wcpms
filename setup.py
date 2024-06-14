@@ -12,14 +12,14 @@ with open(os.path.join(DIR, "README.md"), "r") as file:
 long_description = LONG_DESCRIPTION,
 
 setup(
-    name='cshd',
+    name='wcpms',
     packages=find_packages(),
     include_package_data=True,
     version = VERSION,
-    description='Crop Sowing and Harvesting Detection Service based on Phenolopy.',
+    description='Web Crop Phenological Metrics Service for Earth Observation Data Cubes',
     author='Gabriel Sansigolo',
     author_email = "gabrielsansigolo@gmail.com",
-    url = "https://github.com/GSansigolo/cshd",
+    url = "https://github.com/GSansigolo/wcpms",
     install_requires= [
         "dask==2024.4.1",
         "statsmodels==0.14.2",

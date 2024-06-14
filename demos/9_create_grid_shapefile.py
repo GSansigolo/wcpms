@@ -1,4 +1,4 @@
-from cshd import generate_grid_from_shapefile
+from wcpms import generate_grid_from_shapefile
 import os
 
 path_dir = os.path.dirname(__file__)

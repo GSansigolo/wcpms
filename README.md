@@ -1,2 +1,2 @@
-# CSHD - Crop Sowing and Harvesting Detection Service for Earth Observation Data Cubes
-Crop Sowing and Harvesting Detection Service based on Phenolopy.
+# WCPMS - Web Crop Phenological Metrics Service
+Web Crop Phenological Metrics Service for Earth Observation Data Cubes

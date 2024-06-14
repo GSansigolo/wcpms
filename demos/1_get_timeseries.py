@@ -1,4 +1,4 @@
-from cshd import cube_query, get_timeseries
+from wcpms import cube_query, get_timeseries
 
 S2_cube = cube_query(
     collection="S2-16D-2",

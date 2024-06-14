@@ -1,4 +1,4 @@
-from cshd import generate_grid_from_shapefile, params_phenometrics, cube_query, get_phenometrics
+from wcpms import generate_grid_from_shapefile, params_phenometrics, cube_query, get_phenometrics
 from shapely.geometry import shape
 import fiona
 import os

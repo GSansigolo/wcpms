@@ -1,4 +1,4 @@
-from cshd import params_phenometrics, cube_query, get_phenometrics
+from wcpms import params_phenometrics, cube_query, get_phenometrics
 
 config = params_phenometrics(
     peak_metric='pos', 

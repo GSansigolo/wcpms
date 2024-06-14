@@ -123,7 +123,7 @@ def smooth_timeseries(ts, method='savitsky', window_length=3, polyorder=1):
         smooth_ts = savgol_filter(x=ts, window_length=window_length, polyorder=polyorder)
     return smooth_ts
 
-def get_timeseries_cshd_dataset(cube, geom):
+def get_timeseries_wcpms_dataset(cube, geom):
     band_ts = cube.sel(x=geom[0]['coordinates'][0], y=geom[0]['coordinates'][1], method='nearest')['band_data'].values
     timeline = cube.coords['time'].values
     ts = []
@@ -204,7 +204,7 @@ def calc_phenometrics(da, engine, config, start_date):
                 eos_t=eos_t, 
             )
 
-def calc_phenometrics_cube(cshd_dataset, engine, config, start_date):
+def calc_phenometrics_cube(wcpms_dataset, engine, config, start_date):
     peak_metric = config['peak_metric']
     base_metric = config['base_metric']
     method = config['method']
@@ -215,10 +215,10 @@ def calc_phenometrics_cube(cshd_dataset, engine, config, start_date):
     nan = np.nan
 
     if engine=='phenolopy':
-        list_series = cshd_dataset.keys()
+        list_series = wcpms_dataset.keys()
         list_pheno = []
         for ts in list_series:
-            ds_phenos = phenolopy_calc_phenometrics(da=cshd_dataset[ts], peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
+            ds_phenos = phenolopy_calc_phenometrics(da=wcpms_dataset[ts], peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
             if date_format == 'yyyy-mm-dd': 
                 sos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['sos_times'].values[()]) == False else -9999
                 pos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['pos_times'].values[()]) == False else -9999
@@ -331,7 +331,7 @@ def unzip():
             #print("An exception occurred")
             os.remove(z)
 
-def cshd_img_cube(data_dir):
+def wcpms_img_cube(data_dir):
     list_da = []
     for path in os.listdir(data_dir):
         da = xr.open_dataarray(os.path.join(data_dir+path), engine='rasterio')
@@ -344,13 +344,13 @@ def cshd_img_cube(data_dir):
     data_cube = xr.combine_by_coords(list_da)   
     return data_cube
 
-def cshd_array(timeserie, start_date, freq):
+def wcpms_array(timeserie, start_date, freq):
     np_serie = np.array(timeserie, dtype=np.float32)
     dates_datetime64 = pd.date_range(pd.to_datetime(start_date, format='%Y-%m-%d'), periods=len(np_serie), freq=freq)
     data_xr = xr.DataArray(np_serie, coords = {'time': dates_datetime64})
     return data_xr
 
-def cshd_dataset(timeseries, start_date, freq):
+def wcpms_dataset(timeseries, start_date, freq):
     list_da = []
     for ts in timeseries:
         np_array = np.array(ts['values'], dtype=np.float32)
@@ -383,14 +383,14 @@ def get_phenometrics(cube, geom, engine, smooth_method, config, cloud_filter=Non
             if smooth_method=='savitsky':
                 ts_list.append(dict(values=smooth_timeseries(ts['values'], method='savitsky'), timeline=ts['timeline']))
 
-        data_array = cshd_dataset(
+        data_array = wcpms_dataset(
             timeseries=ts_list,
             start_date=cube['start_date'],
             freq=cube['freq']
         )
 
         ds_phenos = calc_phenometrics_cube(
-            cshd_dataset=data_array,
+            wcpms_dataset=data_array,
             engine='phenolopy',
             config=config,
             start_date=cube['start_date'],
@@ -410,14 +410,14 @@ def get_phenometrics(cube, geom, engine, smooth_method, config, cloud_filter=Non
             data['values'] = interpolate_array(data['values'])
 
         if smooth_method=='None':
-            data_array = cshd_array(
+            data_array = wcpms_array(
                 timeserie=data['values'],
                 start_date=cube['start_date'],
                 freq=cube['freq']
             )
 
         if smooth_method=='savitsky':
-            data_array = cshd_array(
+            data_array = wcpms_array(
                 timeserie=smooth_timeseries(data['values'], method='savitsky'),
                 start_date=cube['start_date'],
                 freq=cube['freq']
