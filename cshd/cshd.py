@@ -119,11 +119,9 @@ def get_timeseries(cube, geom, cloud_filter=None):
         return dict(values=ts, timeline=timeline)
 
 def smooth_timeseries(ts, method='savitsky', window_length=3, polyorder=1):
-
     if (method=='savitsky'):
         smooth_ts = savgol_filter(x=ts, window_length=window_length, polyorder=polyorder)
-
-    return np.array(smooth_ts, dtype=np.float32)
+    return smooth_ts
 
 def get_timeseries_cshd_dataset(cube, geom):
     band_ts = cube.sel(x=geom[0]['coordinates'][0], y=geom[0]['coordinates'][1], method='nearest')['band_data'].values
@@ -131,7 +129,7 @@ def get_timeseries_cshd_dataset(cube, geom):
     ts = []
     for value in band_ts:
         ts.append(value[0])
-    return dict(values=np.array(ts, dtype=np.float32), timeline= timeline)
+    return dict(values=ts, timeline= timeline)
 
 def params_phenometrics(peak_metric='pos', base_metric='bse', method='first_of_slope', factor=0.5, thresh_sides='two_sided', abs_value=0, date_format=None):
     return dict(
@@ -437,11 +435,12 @@ def get_phenometrics(cube, geom, engine, smooth_method, config, cloud_filter=Non
 def interpolate_array(array):
     if len(array) == 0:
         return []
-    inds = np.arange(len(array[0]))
+    array = np.array([np.nan if item == -9999 else item for item in array])
+    inds = np.arange(len(array))
     good = np.where(np.isfinite(array))
     f = scipy_interpolate.interp1d(inds[good],array[good],bounds_error=False)
     return_array = np.where(np.isfinite(array),array,f(inds))
-    return return_array
+    return return_array.tolist()
 
 def generate_grid_from_shapefile(shapefile_dir, grid_type, plot_size=None, distance=None):
     with fiona.open(os.path.join(shapefile_dir)) as shapefile:
