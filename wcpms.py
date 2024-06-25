@@ -2,7 +2,6 @@
 import urllib
 import requests
 from datetime import datetime, timedelta
-from .phenolopy import calc_phenometrics as phenolopy_calc_phenometrics
 from scipy.signal import savgol_filter
 from scipy import interpolate as scipy_interpolate
 from tqdm import tqdm
@@ -21,7 +20,7 @@ import pandas as pd
 from datetime import datetime
 
 url_wtss = 'https://data.inpe.br/bdc/wtss/v4'
-url_stac = 'https://data.inpe.br/bdc/stac/v1'
+
 cloud_dict = {
     'S2-16D-2':{
         'cloud_band': 'SCL',

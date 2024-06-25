@@ -1,10 +1,10 @@
 from flask import Flask
 from flask import Blueprint, abort, request
-from wcpms import params_phenometrics, cube_query, get_phenometrics, wcpms_array, calc_phenometrics
+from wcpms_server import params_phenometrics, cube_query, get_phenometrics, wcpms_array, calc_phenometrics
 
 app = Flask(__name__)
 
-bp = Blueprint('wcpms', import_name=__name__)
+bp = Blueprint('wcpms_server', import_name=__name__)
 
 @app.route("/phenometrics", methods=['GET'])
 def get_phenometrics_timeseries():

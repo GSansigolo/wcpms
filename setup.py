@@ -12,7 +12,7 @@ with open(os.path.join(DIR, "README.md"), "r") as file:
 long_description = LONG_DESCRIPTION,
 
 setup(
-    name='wcpms',
+    name='wcpms_server',
     packages=find_packages(),
     include_package_data=True,
     version = VERSION,
