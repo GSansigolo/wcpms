@@ -27,7 +27,8 @@ def get_phenometrics_timeseries():
         method='seasonal_amplitude', 
         factor=0.2, 
         thresh_sides='two_sided', 
-        abs_value=0.1
+        abs_value=0.1,
+        date_format='yyyy-mm-dd'
     )
 
     point = [dict(coordinates = [float(args['longitude']), float(args['latitude']) ])]
@@ -38,7 +39,7 @@ def get_phenometrics_timeseries():
             engine='phenolopy',
             smooth_method='savitsky',
             cloud_filter = True,
-            interpolate = False,
+            interpolate = True,
             config=config
         )
         cube['longitude'] = float(args['longitude'])
