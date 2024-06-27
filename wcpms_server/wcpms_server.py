@@ -170,7 +170,7 @@ def calc_phenometrics(da, engine, config, start_date):
         rod_v=float(ds_phenos['rod_values'].values[()]) if np.isnan(ds_phenos['rod_values'].values[()]) == False else -9999
         lios_v=float(ds_phenos['lios_values'].values[()]) if np.isnan(ds_phenos['lios_values'].values[()]) == False else -9999
         sios_v=float(ds_phenos['sios_values'].values[()]) if np.isnan(ds_phenos['sios_values'].values[()]) == False else -9999
-        liot_va=float(ds_phenos['liot_values'].values[()]) if np.isnan(ds_phenos['liot_values'].values[()]) == False else -9999
+        liot_v=float(ds_phenos['liot_values'].values[()]) if np.isnan(ds_phenos['liot_values'].values[()]) == False else -9999
         siot_v=float(ds_phenos['siot_values'].values[()]) if np.isnan(ds_phenos['siot_values'].values[()]) == False else -9999
         aos_v=float(ds_phenos['aos_values'].values[()]) if np.isnan(ds_phenos['aos_values'].values[()]) == False else -9999
         bse_v=float(ds_phenos['bse_values'].values[()]) if np.isnan(ds_phenos['bse_values'].values[()]) == False else -9999
@@ -189,7 +189,7 @@ def calc_phenometrics(da, engine, config, start_date):
                 rod_v=rod_v,
                 lios_v=lios_v,
                 sios_v=sios_v,
-                liot_va=liot_va,
+                liot_v=liot_v,
                 siot_v=siot_v,
                 aos_v=aos_v,
                 bse_v=bse_v,
@@ -234,7 +234,7 @@ def calc_phenometrics_cube(wcpms_dataset, engine, config, start_date):
             rod_v=float(ds_phenos['rod_values'].values[()]) if np.isnan(ds_phenos['rod_values'].values[()]) == False else -9999
             lios_v=float(ds_phenos['lios_values'].values[()]) if np.isnan(ds_phenos['lios_values'].values[()]) == False else -9999
             sios_v=float(ds_phenos['sios_values'].values[()]) if np.isnan(ds_phenos['sios_values'].values[()]) == False else -9999
-            liot_va=float(ds_phenos['liot_values'].values[()]) if np.isnan(ds_phenos['liot_values'].values[()]) == False else -9999
+            liot_v=float(ds_phenos['liot_values'].values[()]) if np.isnan(ds_phenos['liot_values'].values[()]) == False else -9999
             siot_v=float(ds_phenos['siot_values'].values[()]) if np.isnan(ds_phenos['siot_values'].values[()]) == False else -9999
             aos_v=float(ds_phenos['aos_values'].values[()]) if np.isnan(ds_phenos['aos_values'].values[()]) == False else -9999
             bse_v=float(ds_phenos['bse_values'].values[()]) if np.isnan(ds_phenos['bse_values'].values[()]) == False else -9999
@@ -253,7 +253,7 @@ def calc_phenometrics_cube(wcpms_dataset, engine, config, start_date):
                 rod_v=rod_v,
                 lios_v=lios_v,
                 sios_v=sios_v,
-                liot_va=liot_va,
+                liot_v=liot_v,
                 siot_v=siot_v,
                 aos_v=aos_v,
                 bse_v=bse_v,

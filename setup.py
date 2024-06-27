@@ -28,7 +28,8 @@ setup(
         "xarray==2024.3.0",
         "tqdm==4.66.4",
         "fiona==1.9.6",
-        "pointpats==2.4.0"
+        "pointpats==2.4.0",
+        "numpy==1.26"
     ],
     long_description = LONG_DESCRIPTION,
     setup_requires=['pytest-runner'],
