@@ -55,8 +55,17 @@ def get_phenometrics_timeseries():
             query = cube,
             result = {}
         )
+
+@app.route("/list_collections", methods=['GET'])
+def get_list_collections():
+    return dict(status="Success")
+
+@app.route("/describe", methods=['GET'])
+def get_describe():
+    return dict(status="Success")
+
 '''    
-@app.route("/calc_phenometrics", methods=['POST'])
+@app.route("/phenometrics_region", methods=['POST'])
 def calc_phenometrics_timeseries():
     args = request.json
 
