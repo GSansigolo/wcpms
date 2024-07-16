@@ -54,6 +54,12 @@ def cube_query(collection, start_date, end_date, freq, band=None):
         freq=freq
     )
 
+def list_collections ():
+    url_suffix = '/list_coverages'
+    list_collections = requests.get(url_wtss + url_suffix) 
+    list_collections_json = list_collections.json()
+    return list_collections_json
+
 def create_filter_array(array, filter_true, filter_false):
     filter_arr = []
     for element in array:
