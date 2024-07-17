@@ -80,7 +80,10 @@ def get_describe():
         dict(Code="LIOT",Name="Long Integral of Total",Description="Represents the total productivity of vegetation throughout the season.",Method="Calculated using the trapezoidal rule between the total vegetation values between season start and end.",Value=True,Time=False),
         dict(Code="NOS",Name="Number of Seasons",Description="Total number of seasons (i.e. prominent graph peaks) in timerseries.",Method="Peaks detected using scipy find_peaks and any peaks are over 3 months apart.",Value=False,Time=False)
     ]
-    return description_json
+    return dict (
+        query = dict(route="describe"),
+        description = description_json
+    )
 
 '''    
 @app.route("/phenometrics_region", methods=['POST'])
