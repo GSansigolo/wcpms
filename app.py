@@ -110,16 +110,63 @@ def get_phenometrics_region():
     grid_type =  data['method']['grid_type']
 
     if grid_type == 'systematic':
-        distance = float(data['method']['distance'])  
-        point = generate_grid_from_geojson(geojson, grid_type, plot_size=None, distance=distance)
+        distance = float(data['method']['distance'])
+        points = generate_grid_from_geojson(geojson, grid_type, plot_size=None, distance=distance)
 
     if grid_type == 'random':
         plot_size = int(data['method']['plot_size'])
-        point = generate_grid_from_geojson(geojson, grid_type, plot_size=plot_size, distance=None)
+        points = generate_grid_from_geojson(geojson, grid_type, plot_size=plot_size, distance=None)
 
     if grid_type == 'all':
         print('TODO')
 
-    print(point)
+    points_dict_list = []
+    for p in points:
+        points_dict_list.append(dict(coordinates = p))
+
+    cube = cube_query(
+        collection = data['collection'],
+        start_date=f"{data['start_date']}",
+        end_date=f"{data['end_date']}",
+        freq=data['freq'],
+        band=data['band']
+    )
     
-    return dict(status = "Success")
+    config = params_phenometrics(
+        peak_metric='pos', 
+        base_metric='vos', 
+        method='seasonal_amplitude', 
+        factor=0.2, 
+        thresh_sides='two_sided', 
+        abs_value=0.1,
+        date_format='yyyy-mm-dd'
+    )
+
+    try:
+        pheno = get_phenometrics(
+            cube=cube,
+            geom=points_dict_list,
+            engine='phenolopy',
+            smooth_method='savitsky',
+            cloud_filter=True,
+            interpolate=True,
+            config=config
+        )
+        cube['method'] = data['method']
+        cube['geom'] = data['geom']
+        list_result = []
+        for i in range(len(pheno['timeseries'])):
+            t = pheno['timeseries'][i]
+            p = pheno['phenometrics'][i]
+            list_result.append(dict(timeline = t['timeline'], point = t['point'][0]['coordinates'].tolist(), phenometrics = p['phenometrics'], timeseries = p['timeseries'].data.tolist()))
+        return dict (
+            query = cube,
+            result = list_result
+        )
+    except:
+        cube['method'] = data['method']
+        cube['geom'] = data['geom']
+        return dict (
+            query = cube,
+            result = {}
+        )

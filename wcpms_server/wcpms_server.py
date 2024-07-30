@@ -253,7 +253,7 @@ def calc_phenometrics_cube(wcpms_dataset, engine, config, start_date):
             vos_t=vos_t 
             eos_v=float(ds_phenos['eos_values'].values[()]) if np.isnan(ds_phenos['eos_values'].values[()]) == False else -9999
             eos_t=eos_t
-            list_pheno.append(dict(
+            pheno = dict(
                 mos_v=mos_v,
                 roi_v=roi_v,
                 rod_v=rod_v,
@@ -272,6 +272,10 @@ def calc_phenometrics_cube(wcpms_dataset, engine, config, start_date):
                 vos_t=vos_t, 
                 eos_v=eos_v,
                 eos_t=eos_t, 
+            )
+            list_pheno.append(dict(
+                phenometrics = pheno,
+                timeseries = wcpms_dataset[ts]
             ))
             
         return list_pheno
@@ -385,9 +389,9 @@ def get_phenometrics(cube, geom, engine, smooth_method, config, cloud_filter=Non
                 ts['values'] = interpolate_array(ts['values'])
 
             if smooth_method=='None':
-                ts_list.append(dict(values=ts['values'], timeline=ts['timeline']))
+                ts_list.append(dict(values=ts['values'], timeline=ts['timeline'], point=[point]))
             if smooth_method=='savitsky':
-                ts_list.append(dict(values=smooth_timeseries(ts['values'], method='savitsky'), timeline=ts['timeline']))
+                ts_list.append(dict(values=smooth_timeseries(ts['values'], method='savitsky'), timeline=ts['timeline'], point=[point]))
 
         data_array = wcpms_dataset(
             timeseries=ts_list,
