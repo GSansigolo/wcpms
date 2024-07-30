@@ -15,7 +15,7 @@ import fiona
 import pointpats
 from shapely.geometry import shape
 from shapely.prepared import prep
-from shapely import Point
+from shapely import Point, Polygon
 import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime
@@ -448,6 +448,17 @@ def interpolate_array(array):
     return_array = np.where(np.isfinite(array),array,f(inds))
     return return_array.tolist()
 
+def generate_grid_from_geojson(geojson, grid_type, plot_size=None, distance=None):
+
+    polygon: Polygon = shape(geojson)
+    
+    if(grid_type == 'random'):
+        return pointpats.random.poisson(polygon, size=plot_size)
+
+    if(grid_type == 'systematic'):
+        points_gs = gen_n_point_in_polygon(None, distance, polygon)
+        return points_gs
+
 def generate_grid_from_shapefile(shapefile_dir, grid_type, plot_size=None, distance=None):
     with fiona.open(os.path.join(shapefile_dir)) as shapefile:
         for record in shapefile:
@@ -503,35 +514,3 @@ def gen_n_point_in_polygon(self, n_point, polygon, tol = 0.1):
         spacing -= tol
     # ---- Return
     return np.array([[pt.x,pt.y] for pt in points])
-
-def plot_pheno(cube, ds_phenos):
-    dates_datetime64 = pd.date_range(pd.to_datetime(cube['start_date'], format='%Y-%m-%d'), periods=len(ds_phenos['timeseries']["timeline"]), freq="16D")
-
-    y_new = smooth_timeseries(ts=ds_phenos['timeseries']['values'], method='savitsky', window_length=2)
-
-    plt.plot(dates_datetime64, ds_phenos['timeseries']['values'], color='blue', label='Raw NDVI') 
-    plt.plot(dates_datetime64, y_new, color='red', label='Smooth NDVI') 
-
-    p = ds_phenos["phenometrics"]
-
-    sos_time = datetime.strptime(p['sos_t'], '%Y-%m-%dT00:00:00')
-    plt.plot(sos_time, p['sos_v'], 'go', label='_nolegend_')
-    plt.annotate('SOS', [sos_time, p['sos_v']])
-
-    eos_time = datetime.strptime(p['eos_t'], '%Y-%m-%dT00:00:00')
-    plt.plot(eos_time, p['eos_v'], 'go', label='_nolegend_')
-    plt.annotate('EOS', [eos_time, p['eos_v']])
-
-    pos_time = datetime.strptime(p['pos_t'], '%Y-%m-%dT00:00:00')
-    plt.plot(pos_time, p['pos_v'], 'go', label='_nolegend_')
-    plt.annotate('POS', [pos_time, p['pos_v']])
-
-    vos_time = datetime.strptime(p['vos_t'], '%Y-%m-%dT00:00:00')
-    plt.plot(vos_time, p['vos_v'], 'go', label='_nolegend_')
-    plt.annotate('VOS', [vos_time, p['vos_v']])
-
-    plt.axvspan(sos_time, eos_time, color='#9af8ff')
-
-    plt.ylabel('Vegetation Health (NDVI)')
-    plt.xlabel('Date')
-    plt.legend(loc="upper right")

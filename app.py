@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import Blueprint, abort, request
-from wcpms_server import list_collections, params_phenometrics, cube_query, get_phenometrics, wcpms_array, calc_phenometrics
+from wcpms_server import list_collections, params_phenometrics, cube_query, get_phenometrics, generate_grid_from_geojson
 
 app = Flask(__name__)
 
@@ -85,36 +85,41 @@ def get_describe():
         description = description_json
     )
 
-'''    
-@app.route("/phenometrics_region", methods=['POST'])
-def calc_phenometrics_timeseries():
-    args = request.json
+  
+@app.route("/phenometrics", methods=['POST'])
+def get_phenometrics_region():
+    args = request.args.to_dict()
 
-    if args['timeserie'] is None:
-        abort(400, 'Missing timeserie')
+    data = request.json
 
-    array = wcpms_array(
-        timeserie=args['timeserie'],
-        start_date=f"{args['start_date']}",
-        freq=args['freq'],
-    )
+    if data['geom'] is None:
+        abort(400, 'Missing Geometry')
 
-    config = params_phenometrics(
-        peak_metric='pos', 
-        base_metric='vos', 
-        method='seasonal_amplitude', 
-        factor=0.2, 
-        thresh_sides='two_sided', 
-        abs_value=0.1
-    )
+    if data['method']['grid_type'] is None:
+        abort(400, 'Missing Method')
 
-    return calc_phenometrics(
-        da=array,
-        engine='phenolopy',
-        config=config,
-        start_date=f"{args['start_date']}",
-    )
-'''
+    if data['method']['grid_type']=='systematic':
+        if data['method']['distance'] is None:
+            abort(400, 'To use Systematic Grid Missing distance')
 
+    if data['method']['grid_type']=='random':
+        if data['method']['plot_size'] is None:
+            abort(400, 'To use Random Grid Missing plot_size')
 
+    geojson = data['geom']
+    grid_type =  data['method']['grid_type']
 
+    if grid_type == 'systematic':
+        distance = float(data['method']['distance'])  
+        point = generate_grid_from_geojson(geojson, grid_type, plot_size=None, distance=distance)
+
+    if grid_type == 'random':
+        plot_size = int(data['method']['plot_size'])
+        point = generate_grid_from_geojson(geojson, grid_type, plot_size=plot_size, distance=None)
+
+    if grid_type == 'all':
+        print('TODO')
+
+    print(point)
+    
+    return dict(status = "Success")
