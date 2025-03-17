@@ -18,8 +18,8 @@ setup(
     version = VERSION,
     description='Web Crop Phenological Metrics Service for Earth Observation Data Cubes',
     author='Gabriel Sansigolo',
-    author_email = "gabrielsansigolo@gmail.com",
-    url = "https://github.com/GSansigolo/wcpms",
+    author_email="gabrielsansigolo@gmail.com",
+    url="https://lajedao.coids.inpe.br/bdc/wcpms",
     install_requires= [
         "dask==2024.4.1",
         "statsmodels==0.14.2",
@@ -29,7 +29,8 @@ setup(
         "tqdm==4.66.4",
         "fiona==1.9.6",
         "pointpats==2.4.0",
-        "numpy==1.26"
+        "numpy==1.26",
+        "flask-cors==5.0.0"
     ],
     long_description = LONG_DESCRIPTION,
     setup_requires=['pytest-runner'],

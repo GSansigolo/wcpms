@@ -28,8 +28,7 @@ LABEL "org.repo.git_commit"="${GIT_COMMIT}"
 LABEL "org.repo.licenses"="GPLv3"
 
 # Build arguments
-ARG BDC_WCPMS_VERSION="1.0.0"
-ARG BDC_WCPMS_INSTALL_PATH="/opt/wcpms/${BDC_WCPMS_VERSION}"
+ARG BDC_WCPMS_INSTALL_PATH="/opt/wcpms"
 
 COPY . ${BDC_WCPMS_INSTALL_PATH}
 WORKDIR ${BDC_WCPMS_INSTALL_PATH}
@@ -43,8 +42,8 @@ RUN pip3 install --upgrade pip && \
     pip install --upgrade wheel
 
 RUN pip install -e .[all] --no-cache
-RUN pip install flask --no-cache
+RUN pip install gunicorn
 
 EXPOSE 5000
 
-CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
+CMD ["gunicorn", "-w4", "--bind=0.0.0.0:5000", "wcpms_server:create_app()", "--timeout", "350"]

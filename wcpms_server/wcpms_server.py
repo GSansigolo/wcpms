@@ -124,9 +124,9 @@ def get_timeseries(cube, geom, cloud_filter=None):
                 timeline = []
         return dict(values=ts, timeline=timeline)
 
-def smooth_timeseries(ts, method='savitsky', window_length=3, polyorder=1):
+def smooth_timeseries(ts, method='savitsky', window_length=3, polyorder=1, deriv = 0, delta = 1, axis = -1, mode = 'interp', cval = 0):
     if (method=='savitsky'):
-        smooth_ts = savgol_filter(x=ts, window_length=window_length, polyorder=polyorder)
+        smooth_ts = savgol_filter(x=ts, window_length=window_length, polyorder=polyorder, deriv=deriv, delta=delta, axis=axis, mode=mode, cval=cval)
     return smooth_ts
 
 def get_timeseries_wcpms_dataset(cube, geom):
@@ -156,7 +156,6 @@ def calc_phenometrics(da, engine, config, start_date):
     thresh_sides = config['thresh_sides']
     abs_value = config['abs_value']
     date_format = config['date_format']
-    nan = np.nan
 
     if engine=='phenolopy':
         ds_phenos = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
@@ -279,7 +278,18 @@ def calc_phenometrics_cube(wcpms_dataset, engine, config, start_date):
             ))
             
         return list_pheno
-    
+
+def calc_phenometrics_cube(da, config):
+    peak_metric = config['peak_metric']
+    base_metric = config['base_metric']
+    method = config['method']
+    factor = config['factor']
+    thresh_sides = config['thresh_sides']
+    abs_value = config['abs_value']
+
+    ds_phenos = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
+    return ds_phenos
+
 def download_stream(file_path: str, response, chunk_size=1024*64, progress=True, offset=0, total_size=None):
     """Download request stream data to disk.
 
@@ -354,9 +364,12 @@ def wcpms_img_cube(data_dir):
     data_cube = xr.combine_by_coords(list_da)   
     return data_cube
 
-def wcpms_array(timeserie, start_date, freq):
+def wcpms_array(timeserie, start_date=None, freq=None, timeline=None):
     np_serie = np.array(timeserie, dtype=np.float32)
-    dates_datetime64 = pd.date_range(pd.to_datetime(start_date, format='%Y-%m-%d'), periods=len(np_serie), freq=freq)
+    if freq is None:
+        dates_datetime64 = pd.DatetimeIndex(data=timeline)
+    else:
+        dates_datetime64 = pd.date_range(pd.to_datetime(start_date, format='%Y-%m-%d'), periods=len(np_serie), freq=freq)
     data_xr = xr.DataArray(np_serie, coords = {'time': dates_datetime64})
     return data_xr
 
@@ -439,8 +452,10 @@ def get_phenometrics(cube, geom, engine, smooth_method, config, cloud_filter=Non
             config=config,
             start_date=cube['start_date']
         )
-            
-    return dict(phenometrics = ds_phenos, timeseries = data)
+
+
+        return dict(phenometrics = ds_phenos, timeseries = data)
+
 
 def interpolate_array(array):
     if len(array) == 0:
