@@ -19,7 +19,7 @@ setup(
     description='Web Crop Phenological Metrics Service for Earth Observation Data Cubes',
     author='Gabriel Sansigolo',
     author_email="gabrielsansigolo@gmail.com",
-    url="https://lajedao.coids.inpe.br/bdc/wcpms",
+     url = "https://github.com/GSansigolo/wcpms",
     install_requires= [
         "dask==2024.4.1",
         "statsmodels==0.14.2",
