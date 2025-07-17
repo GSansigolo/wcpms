@@ -19,6 +19,9 @@ from shapely import Point, Polygon
 import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime
+import warnings
+
+warnings.filterwarnings("ignore")
 
 url_wtss = 'https://data.inpe.br/bdc/wtss/v4'
 
@@ -124,6 +127,22 @@ def get_timeseries(cube, geom, cloud_filter=None):
                 timeline = []
         return dict(values=ts, timeline=timeline)
 
+def get_timeseries_region(cube, geojson):
+    
+    query = dict(
+        attributes=[cube['band']],
+        start_datetime=cube['start_date']+"T00:00:00Z",
+        end_datetime=cube['end_date']+"T23:59:59Z",
+        geom=geojson
+    )
+    url_suffix ='/'+cube['collection']+'/timeseries'
+
+    data = requests.post(url_wtss + url_suffix, json=query) 
+    data_json = data.json()
+
+
+    return data_json
+ 
 def smooth_timeseries(ts, method='savitsky', window_length=3, polyorder=1, deriv = 0, delta = 1, axis = -1, mode = 'interp', cval = 0):
     if (method=='savitsky'):
         smooth_ts = savgol_filter(x=ts, window_length=window_length, polyorder=polyorder, deriv=deriv, delta=delta, axis=axis, mode=mode, cval=cval)
@@ -159,7 +178,6 @@ def calc_phenometrics(da, engine, config, start_date):
 
     if engine=='phenolopy':
         ds_phenos = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
-        #print(ds_phenos)
         if date_format == 'yyyy-mm-dd': 
             sos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['sos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['sos_times'].values[()]) == False else -9999
             pos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['pos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['pos_times'].values[()]) == False else -9999
@@ -209,7 +227,7 @@ def calc_phenometrics(da, engine, config, start_date):
                 eos_t=eos_t, 
             )
 
-def calc_phenometrics_cube(wcpms_dataset, engine, config, start_date):
+def calc_phenometrics_multi(wcpms_dataset, engine, config, start_date, ts_list=None):
     peak_metric = config['peak_metric']
     base_metric = config['base_metric']
     method = config['method']
@@ -230,28 +248,28 @@ def calc_phenometrics_cube(wcpms_dataset, engine, config, start_date):
                 vos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['vos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['vos_times'].values[()]) == False else -9999
                 eos_t = (datetime.strptime(start_date, '%Y-%m-%d') + timedelta(days=int(ds_phenos['eos_times'].values[()]))).strftime("%Y-%m-%dT00:00:00") if np.isnan(ds_phenos['eos_times'].values[()]) == False else -9999
             else: 
-                sos_t = int(ds_phenos['sos_times'].values[()]) if np.isnan(ds_phenos['sos_times'].values[()]) == False else -9999
+                sos_t = int(ds_phenos['sos_times'].values[()]) if np.isnan(ds_phenos['pos_times'].values[()]) == False else -9999
                 pos_t = int(ds_phenos['pos_times'].values[()]) if np.isnan(ds_phenos['pos_times'].values[()]) == False else -9999
                 vos_t = int(ds_phenos['vos_times'].values[()]) if np.isnan(ds_phenos['vos_times'].values[()]) == False else -9999
                 eos_t = int(ds_phenos['eos_times'].values[()]) if np.isnan(ds_phenos['eos_times'].values[()]) == False else -9999
-            mos_v=float(ds_phenos['mos_values'].values[()]) if np.isnan(ds_phenos['mos_values'].values[()]) == False else -9999
-            roi_v=float(ds_phenos['roi_values'].values[()]) if np.isnan(ds_phenos['roi_values'].values[()]) == False else -9999
-            rod_v=float(ds_phenos['rod_values'].values[()]) if np.isnan(ds_phenos['rod_values'].values[()]) == False else -9999
-            lios_v=float(ds_phenos['lios_values'].values[()]) if np.isnan(ds_phenos['lios_values'].values[()]) == False else -9999
-            sios_v=float(ds_phenos['sios_values'].values[()]) if np.isnan(ds_phenos['sios_values'].values[()]) == False else -9999
-            liot_v=float(ds_phenos['liot_values'].values[()]) if np.isnan(ds_phenos['liot_values'].values[()]) == False else -9999
-            siot_v=float(ds_phenos['siot_values'].values[()]) if np.isnan(ds_phenos['siot_values'].values[()]) == False else -9999
-            aos_v=float(ds_phenos['aos_values'].values[()]) if np.isnan(ds_phenos['aos_values'].values[()]) == False else -9999
-            bse_v=float(ds_phenos['bse_values'].values[()]) if np.isnan(ds_phenos['bse_values'].values[()]) == False else -9999
-            los_v=float(ds_phenos['los_values'].values[()]) if np.isnan(ds_phenos['los_values'].values[()]) == False else -9999
-            sos_v=float(ds_phenos['sos_values'].values[()]) if np.isnan(ds_phenos['sos_values'].values[()]) == False else -9999
-            sos_t=sos_t
-            pos_v=float(ds_phenos['pos_values'].values[()]) if np.isnan(ds_phenos['pos_values'].values[()]) == False else -9999 
-            pos_t=pos_t 
-            vos_v=float(ds_phenos['vos_values'].values[()]) if np.isnan(ds_phenos['vos_values'].values[()]) == False else -9999
-            vos_t=vos_t 
-            eos_v=float(ds_phenos['eos_values'].values[()]) if np.isnan(ds_phenos['eos_values'].values[()]) == False else -9999
-            eos_t=eos_t
+            mos_v  = float(ds_phenos['mos_values'].values[()]) if np.isnan(ds_phenos['mos_values'].values[()]) == False else -9999
+            roi_v  = float(ds_phenos['roi_values'].values[()]) if np.isnan(ds_phenos['roi_values'].values[()]) == False else -9999
+            rod_v  = float(ds_phenos['rod_values'].values[()]) if np.isnan(ds_phenos['rod_values'].values[()]) == False else -9999
+            lios_v = float(ds_phenos['lios_values'].values[()]) if np.isnan(ds_phenos['lios_values'].values[()]) == False else -9999
+            sios_v = float(ds_phenos['sios_values'].values[()]) if np.isnan(ds_phenos['sios_values'].values[()]) == False else -9999
+            liot_v = float(ds_phenos['liot_values'].values[()]) if np.isnan(ds_phenos['liot_values'].values[()]) == False else -9999
+            siot_v = float(ds_phenos['siot_values'].values[()]) if np.isnan(ds_phenos['siot_values'].values[()]) == False else -9999
+            aos_v  = float(ds_phenos['aos_values'].values[()]) if np.isnan(ds_phenos['aos_values'].values[()]) == False else -9999
+            bse_v  = float(ds_phenos['bse_values'].values[()]) if np.isnan(ds_phenos['bse_values'].values[()]) == False else -9999
+            los_v  = float(ds_phenos['los_values'].values[()]) if np.isnan(ds_phenos['los_values'].values[()]) == False else -9999
+            sos_v  = float(ds_phenos['sos_values'].values[()]) if np.isnan(ds_phenos['sos_values'].values[()]) == False else -9999
+            sos_t  = sos_t
+            pos_v  = float(ds_phenos['pos_values'].values[()]) if np.isnan(ds_phenos['pos_values'].values[()]) == False else -9999 
+            pos_t  = pos_t 
+            vos_v  = float(ds_phenos['vos_values'].values[()]) if np.isnan(ds_phenos['vos_values'].values[()]) == False else -9999
+            vos_t  = vos_t 
+            eos_v  = float(ds_phenos['eos_values'].values[()]) if np.isnan(ds_phenos['eos_values'].values[()]) == False else -9999
+            eos_t  = eos_t
             pheno = dict(
                 mos_v=mos_v,
                 roi_v=roi_v,
@@ -274,12 +292,13 @@ def calc_phenometrics_cube(wcpms_dataset, engine, config, start_date):
             )
             list_pheno.append(dict(
                 phenometrics = pheno,
-                timeseries = wcpms_dataset[ts]
+                timeline = ts_list[ts]['timeline'],
+                timeseries = ts_list[ts]['values'],
+                point=ts_list[ts]['point'][0]
             ))
-            
         return list_pheno
 
-def calc_phenometrics_cube(da, config):
+def phenometrics_data_cube(da, engine, config):
     peak_metric = config['peak_metric']
     base_metric = config['base_metric']
     method = config['method']
@@ -287,8 +306,9 @@ def calc_phenometrics_cube(da, config):
     thresh_sides = config['thresh_sides']
     abs_value = config['abs_value']
 
-    ds_phenos = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
-    return ds_phenos
+    if engine=='phenolopy':
+        ds_phenos = phenolopy_calc_phenometrics(da=da, peak_metric=peak_metric, base_metric=base_metric, method=method, factor=factor, thresh_sides=thresh_sides, abs_value=abs_value)
+        return ds_phenos
 
 def download_stream(file_path: str, response, chunk_size=1024*64, progress=True, offset=0, total_size=None):
     """Download request stream data to disk.
@@ -385,26 +405,29 @@ def wcpms_dataset(timeseries, start_date, freq):
         dict_cube[index] = element
     return xr.Dataset(dict_cube)
 
-def get_phenometrics(cube, geom, engine, smooth_method, config, cloud_filter=None, interpolate=None):
-            
-    if len(geom)>1:
+def wcpms_get_timeseries_region(cube, geojson, smooth_method):
         
-        ts_list = []
+    ts_list = []
 
-        for point in geom:
-            ts = get_timeseries(
-                cube=cube, 
-                geom=[point],
-                cloud_filter=cloud_filter
-            )
+    tss = get_timeseries_region(
+        cube=cube, 
+        geojson=geojson
+    )
 
-            if (interpolate):
-                ts['values'] = interpolate_array(ts['values'])
+    for ts in tss['results']:
 
-            if smooth_method=='None':
-                ts_list.append(dict(values=ts['values'], timeline=ts['timeline'], point=[point]))
-            if smooth_method=='savitsky':
-                ts_list.append(dict(values=smooth_timeseries(ts['values'], method='savitsky'), timeline=ts['timeline'], point=[point]))
+        ts['values'] = interpolate_array(ts['time_series']['values'][cube['band']])
+
+        if smooth_method=='None':
+            ts_list.append(dict(values=ts['time_series']['values'][cube['band']], timeline=ts['time_series']['timeline'], point=[ts['pixel_center']['coordinates']]))
+        if smooth_method=='savitsky':
+            ts_list.append(dict(values=smooth_timeseries(ts['time_series']['values'][cube['band']], method='savitsky'), timeline=ts['time_series']['timeline'], point=[ts['pixel_center']['coordinates']]))
+
+    return ts_list
+
+def get_phenometrics(cube, geom, ts_list, engine, smooth_method, config, cloud_filter=None, interpolate=None):
+    
+    if (ts_list):
 
         data_array = wcpms_dataset(
             timeseries=ts_list,
@@ -412,15 +435,16 @@ def get_phenometrics(cube, geom, engine, smooth_method, config, cloud_filter=Non
             freq=cube['freq']
         )
 
-        ds_phenos = calc_phenometrics_cube(
+        ds_phenos = calc_phenometrics_multi(
             wcpms_dataset=data_array,
             engine='phenolopy',
             config=config,
             start_date=cube['start_date'],
+            ts_list=ts_list,
         )
 
-        data = ts_list
-        
+        return ds_phenos
+
     else:
     
         data = get_timeseries(
@@ -453,9 +477,7 @@ def get_phenometrics(cube, geom, engine, smooth_method, config, cloud_filter=Non
             start_date=cube['start_date']
         )
 
-
         return dict(phenometrics = ds_phenos, timeseries = data)
-
 
 def interpolate_array(array):
     if len(array) == 0:

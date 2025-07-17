@@ -46,4 +46,4 @@ RUN pip install gunicorn
 
 EXPOSE 5000
 
-CMD ["gunicorn", "-w4", "--bind=0.0.0.0:5000", "wcpms_server:create_app()", "--timeout", "350"]
+CMD ["gunicorn", "-w4", "--bind=0.0.0.0:5000", "wcpms_server:create_app()", "--timeout", "30", "--max-requests", "256"]

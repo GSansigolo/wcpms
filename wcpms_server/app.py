@@ -1,12 +1,10 @@
 from flask import Flask
 from flask import Blueprint, abort, request
-from flask_cors import CORS, cross_origin
-from wcpms_server import list_collections, params_phenometrics, cube_query, get_phenometrics, generate_grid_from_geojson
+from wcpms_server import list_collections, params_phenometrics, cube_query, get_phenometrics, wcpms_get_timeseries_region
 
 bp = Blueprint('wcpms_server', import_name=__name__)
 
 @bp.route("/phenometrics", methods=['GET'])
-@cross_origin(origin='*')
 def get_phenometrics_timeseries():
     args = request.args.to_dict()
 
@@ -45,8 +43,9 @@ def get_phenometrics_timeseries():
         pheno = get_phenometrics(
             cube=cube,
             geom=point,
+            ts_list=None,
             engine='phenolopy',
-            smooth_method='savitsky',
+            smooth_method='None',
             cloud_filter = args_cloud_filter,
             interpolate = args_interpolate,
             config=config
@@ -93,45 +92,15 @@ def get_describe():
         query = dict(route="describe"),
         description = description_json
     )
-
-  
+ 
 @bp.route("/phenometrics", methods=['POST'])
 def get_phenometrics_region():
     args = request.args.to_dict()
 
     data = request.json
 
-    if data['geom'] is None:
-        abort(400, 'Missing Geometry')
-
-    if data['method']['grid_type'] is None:
-        abort(400, 'Missing Method')
-
-    if data['method']['grid_type']=='systematic':
-        if data['method']['distance'] is None:
-            abort(400, 'To use Systematic Grid Missing distance')
-
-    if data['method']['grid_type']=='random':
-        if data['method']['plot_size'] is None:
-            abort(400, 'To use Random Grid Missing plot_size')
-
-    geojson = data['geom']
-    grid_type =  data['method']['grid_type']
-
-    if grid_type == 'systematic':
-        distance = float(data['method']['distance'])
-        points = generate_grid_from_geojson(geojson, grid_type, plot_size=None, distance=distance)
-
-    if grid_type == 'random':
-        plot_size = int(data['method']['plot_size'])
-        points = generate_grid_from_geojson(geojson, grid_type, plot_size=plot_size, distance=None)
-
-    #if grid_type == 'all':
-        #todo
-
-    points_dict_list = []
-    for p in points:
-        points_dict_list.append(dict(coordinates = p))
+    if data['timeseries'] is None:
+        abort(400, 'Missing Timeseries')
 
     cube = cube_query(
         collection = data['collection'],
@@ -154,27 +123,56 @@ def get_phenometrics_region():
     try:
         pheno = get_phenometrics(
             cube=cube,
-            geom=points_dict_list,
+            geom=[],
+            ts_list=data['timeseries'],
             engine='phenolopy',
             smooth_method='savitsky',
             cloud_filter=True,
             interpolate=True,
             config=config
         )
-        cube['method'] = data['method']
-        cube['geom'] = data['geom']
-        list_result = []
-        for i in range(len(pheno['timeseries'])):
-            t = pheno['timeseries'][i]
-            p = pheno['phenometrics'][i]
-            list_result.append(dict(timeline = t['timeline'], point = t['point'][0]['coordinates'].tolist(), phenometrics = p['phenometrics'], timeseries = p['timeseries'].data.tolist()))
+
         return dict (
             query = cube,
-            result = list_result
+            result = pheno
         )
     except:
-        cube['method'] = data['method']
-        cube['geom'] = data['geom']
+        return dict (
+            query = cube,
+            result = {}
+        )
+
+@bp.route("/timeseries", methods=['POST'])
+def get_timeseries_region():
+    args = request.args.to_dict()
+
+    data = request.json
+
+    if data['geom'] is None:
+        abort(400, 'Missing Geometry')
+
+    geojson = data['geom']
+
+    cube = cube_query(
+        collection = data['collection'],
+        start_date=f"{data['start_date']}",
+        end_date=f"{data['end_date']}",
+        freq=data['freq'],
+        band=data['band']
+    )
+    
+    try:
+        timeseries = wcpms_get_timeseries_region(
+            cube=cube,
+            geojson=geojson,
+            smooth_method='None'
+        )
+
+        return dict (
+            query = cube,
+            result = timeseries
+        )
+    except:
         return dict (
             query = cube,
             result = {}
