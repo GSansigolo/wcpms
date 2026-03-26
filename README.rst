@@ -24,6 +24,10 @@
 Web Crop Phenology Metrics Service
 =================================================
 
+.. image:: https://zenodo.org/badge/DOI/10.1080/20964471.2026.2641272.svg
+        :target: https://doi.org/10.1080/20964471.2026.2641272
+        :alt: doi
+        
 
 .. image:: https://img.shields.io/badge/License-GPLv3-blue.svg
         :target: https://github.com/brazil-data-cube/wcpms.py/blob/master/LICENSE
@@ -80,30 +84,22 @@ WCPMS is based on four operations:
 - ``phenometrics_region``: returns in list form  dictionary with the phenological metrics calculated for each of the given spatial location based on selected region methodology (all, systematic grid or random grid).
 
 
-Installation
-============
+Changes
+=======
 
-See `INSTALL.rst <./INSTALL.rst>`_.
-
-
-Using WLTS in the Command Line
-==============================
-
-See `CLI.rst <./CLI.rst>`_.
+See `Changes <https://github.com/GSansigolo/wcpms/blob/main/CHANGES.rst>`_.
 
 
 Documentation
 =============
 
-
-WIP
+See https://wcpms.readthedocs.io/en/latest.
 
 
 References
 ==========
 
-
-WIP
+Sansigolo, G., Reis Ferreira, K., De Queiroz, G. R., Körting, T., Pereira Garcia Leão, L., & Adami, M. (2026). A tool for crop phenology metrics analysis from big Earth observation data. Big Earth Data, 1–24. https://doi.org/10.1080/20964471.2026.2641272
 
 
 License

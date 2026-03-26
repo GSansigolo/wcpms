@@ -21,9 +21,9 @@ Version 0.3.0 (2025-04-03)
 Version 0.2.0 (2025-02-24)
 --------------------------
 
-- Revisar Dockerfile para uso do gunicorn ao inves do Flask (#2)
-- Correção nos cabeçalhos CORS do serviço
-- Mapeamento de parametros na função de filtro
+- Review Dockerfile to use gunicorn instead of Flask (#2)
+- Correction to the service's CORS headers
+- Parameter mapping in the filter function
 
 
 Version 0.1.0 (2024-11-05)
