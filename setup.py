@@ -16,10 +16,15 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     version = VERSION,
+    entry_points={
+        'console_scripts': [
+            "wcpms_server=wcpms_server.cli:cli",
+        ],
+    },
     description='Web Crop Phenological Metrics Service for Earth Observation Data Cubes',
     author='Gabriel Sansigolo',
     author_email="gabrielsansigolo@gmail.com",
-    url="https://lajedao.coids.inpe.br/bdc/wcpms",
+    url="https://data.inpe.br/bdc/wcpms",
     install_requires= [
         "Flask>=2",
         "dask==2024.4.1",
@@ -31,7 +36,8 @@ setup(
         "fiona==1.9.6",
         "pointpats==2.4.0",
         "numpy==1.26",
-        "requests==2.32.3"
+        "requests==2.32.3",
+        "simplecube==0.9.2"
     ],
     long_description = LONG_DESCRIPTION,
     setup_requires=['pytest-runner'],

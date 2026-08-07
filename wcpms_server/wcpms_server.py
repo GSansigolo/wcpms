@@ -1,6 +1,7 @@
 
 import urllib
 import requests
+from simplecube import local_simple_cube
 from datetime import datetime, timedelta
 from .phenolopy import calc_phenometrics as phenolopy_calc_phenometrics
 from scipy.signal import savgol_filter
@@ -555,3 +556,56 @@ def gen_n_point_in_polygon(self, n_point, polygon, tol = 0.1):
         spacing -= tol
     # ---- Return
     return np.array([[pt.x,pt.y] for pt in points])
+
+def datacube_phenometrics(collection, data_dir, bbox, bands=["B04", "B08"]):
+    """
+    Generates a data cube, calculates NDVI, and extracts phenological metrics.
+    
+    Args:
+        collection (str): The dataset collection name.
+        data_dir (str): Path to the local data directory.
+        bbox (list/tuple): Bounding box coordinates.
+        bands (list): List of bands to use. Defaults to ["B04", "B08"] (Red, NIR).
+        
+    Returns:
+        ds_phenos: Data cube containing the calculated phenometrics.
+    """
+    
+    # 1. Load the local data cube
+    HLS_cube = local_simple_cube(
+        collection=collection,
+        data_dir=data_dir,
+        source='bdc',
+        bands=bands,
+        bbox=bbox
+    )
+
+    # 2. Extract Red and NIR bands dynamically based on the input list
+    red_band_name = bands[0]
+    nir_band_name = bands[1]
+    
+    red_band = getattr(HLS_cube, red_band_name)
+    nir_band = getattr(HLS_cube, nir_band_name)
+
+    # 3. Calculate NDVI and add it to the cube
+    ndvi = (nir_band - red_band) / (nir_band + red_band)
+    HLS_cube['NDVI'] = ndvi
+
+    # 4. Configure phenometrics parameters
+    config = params_phenometrics(
+        peak_metric='pos', 
+        base_metric='vos', 
+        method='seasonal_amplitude', 
+        factor=0.2, 
+        thresh_sides='two_sided', 
+        abs_value=0.1
+    )
+
+    # 5. Calculate and return phenometrics
+    ds_phenos = phenometrics_data_cube(
+        da=HLS_cube['NDVI'],
+        engine='phenolopy',
+        config=config
+    )
+
+    return ds_phenos
