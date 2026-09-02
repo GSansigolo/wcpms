@@ -21,7 +21,7 @@
 import click
 import os
 
-from .wcpms_server import get_phenometrics as run_phenometrics
+from .wcpms_server import datacube_phenometrics as run_phenometrics
 
 class Config:
     """A simple decorator class for command line options."""
@@ -94,7 +94,7 @@ def datacube_phenometrics(
     result = run_phenometrics(
         collection=collection,
         data_dir=data_dir,
-        bbox=bbox_list,
+        bbox=bbox,
         bands=list(bands)
     )
 

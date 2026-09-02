@@ -4,8 +4,10 @@ CHANGES
 Version 0.5.0 (2026-08-07)
 --------------------------
 - Fix bug in single phenometric calculation by replacing geojson parameter with ts_list  
-- Add new phenometrics_data_cube function for  calculate phenological metrics from Xarray  
+- Add new phenometrics_data_cube function for calculate phenological metrics from Xarray  
 - Rename calc_phenometrics_cube to calc_phenometrics_multi for clearer functionality distinction  
+- Added Command Line Interface (CLI) to wcpms_server, now its possible to perform calculation of phenological metrics directly via the command line. 
+- Added support for data cube output from smosaic on `datacube-phenometrics` function, it automatically calculate metrics from structured ``collection/scene/bands`` folder directory.
 
 Version 0.4.0 (2025-07-17)
 --------------------------

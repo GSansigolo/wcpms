@@ -557,7 +557,53 @@ def gen_n_point_in_polygon(self, n_point, polygon, tol = 0.1):
     # ---- Return
     return np.array([[pt.x,pt.y] for pt in points])
 
-def datacube_phenometrics(collection, data_dir, bbox, bands=["B04", "B08"]):
+def process_pheno_in_chunks(da, engine, config, chunk_size=500):
+    """
+    Manually chops the data array into smaller spatial chunks to bypass 
+    the library's memory limits.
+    """
+    results = []
+    
+    # Get the total size of X and Y dimensions
+    x_len = len(da.x)
+    y_len = len(da.y)
+    
+    print(f"Processing image of size {x_len}x{y_len} in {chunk_size}x{chunk_size} chunks...")
+    
+    x_ranges = list(range(0, x_len, chunk_size))
+    y_ranges = list(range(0, y_len, chunk_size))
+    total_chunks = len(x_ranges) * len(y_ranges)
+    
+    # Initialize tqdm progress bar
+    with tqdm(total=total_chunks, desc="Processing chunks") as pbar:
+        # Loop through the image in grid squares
+        for i in x_ranges:
+            row_results = []
+            for j in y_ranges:
+                # Slice a small chunk of the data
+                da_chunk = da.isel(x=slice(i, i + chunk_size), y=slice(j, j + chunk_size))
+                
+                # Run the memory-heavy function on JUST this small chunk
+                chunk_result = phenometrics_data_cube(
+                    da=da_chunk,
+                    engine=engine,
+                    config=config
+                )
+
+                row_results.append(chunk_result)
+                
+                # Update progress bar
+                pbar.update(1)
+                
+            # Concatenate the row horizontally (along Y)
+            row_concat = xr.concat(row_results, dim='y')
+            results.append(row_concat)
+            
+    # Concatenate all rows vertically (along X)
+    final_ds = xr.concat(results, dim='x')
+    return final_ds
+
+def datacube_phenometrics(collection, data_dir, bbox, tile="000", bands=["B04", "B08"]):
     """
     Generates a data cube, calculates NDVI, and extracts phenological metrics.
     
@@ -570,13 +616,16 @@ def datacube_phenometrics(collection, data_dir, bbox, bands=["B04", "B08"]):
     Returns:
         ds_phenos: Data cube containing the calculated phenometrics.
     """
+
+    print(f"Processing {collection} collection locally...")
     
     # 1. Load the local data cube
-    HLS_cube = local_simple_cube(
+    l_data_cube = local_simple_cube(
         collection=collection,
         data_dir=data_dir,
         source='bdc',
         bands=bands,
+        tile=tile,
         bbox=bbox
     )
 
@@ -584,12 +633,12 @@ def datacube_phenometrics(collection, data_dir, bbox, bands=["B04", "B08"]):
     red_band_name = bands[0]
     nir_band_name = bands[1]
     
-    red_band = getattr(HLS_cube, red_band_name)
-    nir_band = getattr(HLS_cube, nir_band_name)
+    red_band = getattr(l_data_cube, red_band_name)
+    nir_band = getattr(l_data_cube, nir_band_name)
 
     # 3. Calculate NDVI and add it to the cube
     ndvi = (nir_band - red_band) / (nir_band + red_band)
-    HLS_cube['NDVI'] = ndvi
+    l_data_cube['NDVI'] = ndvi
 
     # 4. Configure phenometrics parameters
     config = params_phenometrics(
@@ -602,10 +651,24 @@ def datacube_phenometrics(collection, data_dir, bbox, bands=["B04", "B08"]):
     )
 
     # 5. Calculate and return phenometrics
-    ds_phenos = phenometrics_data_cube(
-        da=HLS_cube['NDVI'],
+    ds_phenos = process_pheno_in_chunks(
+        l_data_cube['NDVI'], 
         engine='phenolopy',
-        config=config
+        config=config,
+        chunk_size=500
     )
 
-    return ds_phenos
+    # 6. Save the phenometrics as tif files
+    output_dir = "phenometrics"
+    os.makedirs(output_dir, exist_ok=True)
+    for var_name in ds_phenos.data_vars:
+        n_var_name = var_name.replace("_values", "").replace("_times", "_TIME").upper()
+        filename = f"{collection}_V1_{tile}_phenological_metrics_{n_var_name}.tif"
+        filepath = os.path.join(output_dir, filename)
+        da = ds_phenos[var_name]
+        if 'time' in da.coords:
+            da = da.drop_vars('time')
+        da.rio.to_raster(filepath)
+        print(f"Saved: {filepath}")
+        
+    return print("Finished!")
