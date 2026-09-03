@@ -1,8 +1,17 @@
 from flask import Flask
+
+import json
+import pyproj
+import shapely.geometry
+from shapely.errors import GeometryTypeError
+
 from flask import Blueprint, abort, request
 from wcpms_server import list_collections, params_phenometrics, cube_query, get_phenometrics, wcpms_get_timeseries_region
 
 bp = Blueprint('wcpms_server', import_name=__name__)
+
+AREA_LIMIT = 3000
+"""Define area to represent 3000 ha."""
 
 @bp.route("/phenometrics", methods=['GET'])
 def get_phenometrics_timeseries():
@@ -152,6 +161,8 @@ def get_timeseries_region():
         abort(400, 'Missing Geometry')
 
     geojson = data['geom']
+    
+    check_geometry(geojson)
 
     cube = cube_query(
         collection = data['collection'],
@@ -177,3 +188,34 @@ def get_timeseries_region():
             query = cube,
             result = {}
         )
+    
+def check_geometry(query_geom):
+    """Validate the geometry parameter and set a limit of area for request."""
+    try:
+
+        geom = shapely.geometry.shape(query_geom)
+
+        # Check polygon area
+        if geom.geom_type in ["Polygon", "MultiPolygon"]:
+            area_ha = get_geometry_area(geom)
+            
+            if not area_ha:
+                abort(400, "Invalid geometry.")
+
+            if area_ha > AREA_LIMIT:
+                abort(400, f'The polygon area {area_ha} must be less than {AREA_LIMIT}ha.')
+
+        return geom
+
+    except (json.JSONDecodeError, AttributeError, GeometryTypeError, KeyError):
+        abort(400, "Invalid geometry.")
+
+def get_geometry_area(polygon_geom):
+    """Get polygon area."""
+    try:
+        geod = pyproj.Geod(ellps="WGS84")
+        area_m2, _ = geod.geometry_area_perimeter(polygon_geom)
+        area_ha = area_m2/10000
+        return area_ha
+    except:
+        return None

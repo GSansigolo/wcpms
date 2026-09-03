@@ -1,8 +1,9 @@
 CHANGES
 =======
 
-Version 0.5.0 (2026-08-07)
+Version 0.5.0 (2026-09-04)
 --------------------------
+- Fix bug of slow performance in WCPMS when area is too large, causing timeouts, given a predefined area. Added a mechanism to limit user requests within a predefined limit area.
 - Fix bug in single phenometric calculation by replacing geojson parameter with ts_list  
 - Add new phenometrics_data_cube function for calculate phenological metrics from Xarray  
 - Rename calc_phenometrics_cube to calc_phenometrics_multi for clearer functionality distinction  
