@@ -1,5 +1,6 @@
 from flask import Flask
 
+import os
 import json
 import pyproj
 import shapely.geometry
@@ -10,11 +11,21 @@ from wcpms_server import list_collections, params_phenometrics, cube_query, get_
 
 bp = Blueprint('wcpms_server', import_name=__name__)
 
-AREA_LIMIT = 3000
+AREA_LIMIT = int(os.getenv("WCPMS_AREA_LIMIT"))
 """Define area to represent 3000 ha."""
 
-TS_LIMIT = 350
+TS_LIMIT = int(os.getenv("TS_LIMIT"))
 """Define timeseries limit of 350."""
+
+VERSION = os.getenv("VERSION")
+"""Define version of wcpms."""
+
+@bp.route("/", methods=['GET'])
+def get_base():
+    return dict(
+        service = "Web Crop Phenology Metrics Service (WCPMS)",
+        version = VERSION
+    )
 
 @bp.route("/phenometrics", methods=['GET'])
 def get_phenometrics_timeseries():
