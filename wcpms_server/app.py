@@ -13,6 +13,9 @@ bp = Blueprint('wcpms_server', import_name=__name__)
 AREA_LIMIT = 3000
 """Define area to represent 3000 ha."""
 
+TS_LIMIT = 350
+"""Define timeseries limit of 350."""
+
 @bp.route("/phenometrics", methods=['GET'])
 def get_phenometrics_timeseries():
     args = request.args.to_dict()
@@ -110,6 +113,8 @@ def get_phenometrics_region():
 
     if data['timeseries'] is None:
         abort(400, 'Missing Timeseries')
+    
+    check_timeseries(data['timeseries'])
 
     cube = cube_query(
         collection = data['collection'],
@@ -219,3 +224,20 @@ def get_geometry_area(polygon_geom):
         return area_ha
     except:
         return None
+
+def check_timeseries(timeseries):
+    """Validate the timeseries parameter and set a limit of numbert per request."""
+    try:
+
+        len_ts = len(timeseries)
+
+        if not timeseries:
+            abort(400, "Invalid timeseries.")
+
+        if len_ts > TS_LIMIT:
+            abort(400, f'The number of timeseries per request ({len_ts}) must be less than ({TS_LIMIT}).')
+
+        return len_ts
+
+    except:
+        abort(400, "Invalid timeseries.")
